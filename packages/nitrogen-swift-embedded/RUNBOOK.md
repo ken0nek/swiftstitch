@@ -1,5 +1,23 @@
 # `nitrogen-swift-embedded` — runbook
 
+## What you actually do
+
+Given a `Hybrid<Name>.swift` and its IR JSON, three commands produce an
+Android-linkable object file with no Swift runtime:
+
+```bash
+nitrogen-swift-embedded emit      --ir out/Name.ir.json --out out/swift-embedded
+nitrogen-swift-embedded emit-cpp  --ir out/Name.ir.json --out out/cpp-glue --namespace margelo::nitro::demo
+nitrogen-swift-embedded compile   --ir out/Name.ir.json \
+  --user-swift src/HybridName.swift --bridge-dir out/swift-embedded \
+  --out-o out/HybridName.o --arch aarch64 \
+  --swiftc ~/Library/Developer/Toolchains/swift-6.3.1-RELEASE.xctoolchain/usr/bin/swiftc
+```
+
+You then link `out/HybridName.o` into your host `.so` with NDK clang — this CLI
+does not do the link. Full worked example under
+[End-to-end (one Hybrid)](#end-to-end-one-hybrid).
+
 **What it does.** Swift CLI that turns IR JSON into the Phase 2C glue files and drives `swiftc` in Embedded mode to produce a no-runtime `.o` for Android. Three subcommands:
 
 - `emit` — generates `<Class>+CBridge.swift` (Swift `@c` shims).
@@ -74,7 +92,7 @@ nitrogen-swift-embedded compile
   --swiftc <path>               # path to a Swift 6.3+ swiftc
 ```
 
-Runs `swiftc -target <arch>-none-none-elf -enable-experimental-feature Embedded -enable-experimental-feature CImplementation -wmo -parse-as-library -O -c -o <out>.o <user-swift>... <bridge>...`.
+Runs `swiftc -target <arch>-none-none-elf -enable-experimental-feature Embedded -enable-experimental-feature CImplementation -wmo -parse-as-library -c -o <out>.o <user-swift>... <bridge>...`.
 
 The choice of `*-none-none-elf` (bare-metal ELF, no OS) is deliberate — it produces no-runtime object code that the Android NDK can link directly into a host `.so`. The AAPCS/AAPCS64 calling conventions match what Android expects, so the only remaining undefined symbols are bionic primitives (`free`, `memmove`, `posix_memalign`, `__stack_chk_*`, `putchar`).
 
@@ -134,9 +152,16 @@ swift test          # 15/15 expected
 Coverage:
 - `CBridgeEmitterTests` — golden files for `HybridSimpleMath` / `HybridMath` / `HybridTypes`, determinism check.
 - `CppGlueEmitterTests` — golden + Float widening + void return + namespace shape.
-- `EmbeddedCompilerTests` — actually invokes Swift 6.3+ swiftc and asserts a non-trivial `.o` is produced. Skips if the toolchain isn't installed.
+- `EmbeddedCompilerTests` — actually invokes Swift 6.3+ swiftc and asserts a
+  non-trivial `.o` is produced.
 - `CLITests` — end-to-end exercise of `emit`, `emit-cpp`, `compile` subcommands.
-- `EndToEndIntegrationTests` — full pipeline through NDK link, asserting `DT_NEEDED` is bionic-only and the `@c` symbols are exported. Skips if Swift 6.3+ or NDK aren't present.
+- `EndToEndIntegrationTests` — full pipeline through NDK link, asserting
+  `DT_NEEDED` is bionic-only and the `@c` symbols are exported.
+
+**These do not skip without a toolchain — they fail.** The guards use
+`Issue.record("...; skipping")`, and in swift-testing `Issue.record` records a
+failure. Treat "15/15" as a claim about a machine with Swift 6.3+ and NDK r27+
+installed. Converting these to `.enabled(if:)` traits is a tracked follow-up.
 
 ## Common errors
 
@@ -144,6 +169,13 @@ Coverage:
 - *"unable to load standard library for target 'aarch64-unknown-linux-android28'"* — you're trying to use the Android SDK target with `-enable-experimental-feature Embedded`. Embedded mode requires a `*-none-none-elf` target instead. The `compile` subcommand uses the right target automatically; check your CLI args if you've overridden `--arch`.
 - *"file not found: <Class>+CBridge.swift"* — `--bridge-dir` doesn't contain a bridge file matching the IR's class names. Run `emit` first.
 - *"Phase 2C swift-embedded does not yet support type `string`"* — the IR uses a type outside Phase 2C's primitive subset. Stick to `Bool`/`Double`/`Int64`/`UInt64`/`Void` for now.
+- *Compile errors about `@c` or Embedded being unavailable, when the toolchain
+  "is installed"* — the test helpers try
+  `swift-6.3.1-RELEASE` → `swift-6.3.0-RELEASE` → `swift-latest.xctoolchain`
+  in order. `swift-latest` is a symlink that may resolve to a pre-6.3
+  toolchain (6.2.3 on the maintainer's machine), which lacks both features.
+  Point `--swiftc` at an explicit 6.3.x path rather than relying on the
+  fallback.
 
 ## Limitations (current 2C scope)
 
@@ -154,6 +186,9 @@ Coverage:
 
 ## See also
 
-- `../nitrogen-swift-input/WORKLOG.md` "Phase 2C" — design rationale and the live-emulator validation log.
-- `../nitrogen-swift-spec-input/RUNBOOK.md` — the TS adapter that, when paired with nitrogen's `android: 'swift'` autolinking, makes `bun nitro` invoke this pipeline automatically at codegen + build time.
-- `Tests/NitrogenSwiftEmbeddedCoreTests/EndToEndIntegrationTests.swift` — the strongest reproducer of the headline assertion.
+- [`../nitrogen-swift-input/RUNBOOK.md`](../nitrogen-swift-input/RUNBOOK.md) —
+  the front end that produces the IR JSON this package consumes.
+- `Tests/NitrogenSwiftEmbeddedCoreTests/EndToEndIntegrationTests.swift` — the
+  strongest reproducer of the no-Swift-runtime assertion.
+- The alongside-pass that makes `bun nitro` drive this pipeline automatically
+  is not in this repo yet; it lands with `nitrogen-swift-spec-input`.
