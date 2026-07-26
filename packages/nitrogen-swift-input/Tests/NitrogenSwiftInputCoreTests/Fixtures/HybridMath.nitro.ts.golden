@@ -1,0 +1,8 @@
+import type { HybridObject, Int64, UInt64 } from 'react-native-nitro-modules'
+
+export interface Math extends HybridObject<{ ios: 'swift'; android: 'swift' }> {
+  add(a: number, b: number): number
+  subtract(a: Int64, b: Int64): Int64
+  magnitude(value: Int64): UInt64
+  reset(): void
+}

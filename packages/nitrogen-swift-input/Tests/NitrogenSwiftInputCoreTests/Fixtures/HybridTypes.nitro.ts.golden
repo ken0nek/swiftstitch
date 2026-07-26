@@ -1,0 +1,13 @@
+import type { HybridObject, Int64, UInt64 } from 'react-native-nitro-modules'
+
+export interface Types extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
+  passBool(value: boolean): boolean
+  passDouble(value: number): number
+  passFloat(value: number): number
+  passInt64(value: Int64): Int64
+  passUInt64(value: UInt64): UInt64
+  returnsVoid(): void
+  explicitVoid(): void
+  throwingAdd(a: number, b: number): number
+  noArgs(): Int64
+}

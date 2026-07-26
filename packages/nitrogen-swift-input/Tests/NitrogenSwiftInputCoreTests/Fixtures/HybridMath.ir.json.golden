@@ -1,0 +1,88 @@
+{
+  "objects" : [
+    {
+      "className" : "HybridMath",
+      "methods" : [
+        {
+          "isThrowing" : true,
+          "name" : "add",
+          "parameters" : [
+            {
+              "label" : "a",
+              "type" : {
+                "kind" : "double"
+              }
+            },
+            {
+              "label" : "b",
+              "type" : {
+                "kind" : "double"
+              }
+            }
+          ],
+          "returnType" : {
+            "kind" : "double"
+          }
+        },
+        {
+          "isThrowing" : false,
+          "name" : "subtract",
+          "parameters" : [
+            {
+              "label" : "a",
+              "type" : {
+                "kind" : "int64"
+              }
+            },
+            {
+              "label" : "b",
+              "type" : {
+                "kind" : "int64"
+              }
+            }
+          ],
+          "returnType" : {
+            "kind" : "int64"
+          }
+        },
+        {
+          "isThrowing" : false,
+          "name" : "magnitude",
+          "parameters" : [
+            {
+              "label" : "value",
+              "type" : {
+                "kind" : "int64"
+              }
+            }
+          ],
+          "returnType" : {
+            "kind" : "uint64"
+          }
+        },
+        {
+          "isThrowing" : false,
+          "name" : "reset",
+          "parameters" : [
+
+          ],
+          "returnType" : {
+            "kind" : "void"
+          }
+        }
+      ],
+      "platforms" : [
+        {
+          "language" : "swift",
+          "platform" : "ios"
+        },
+        {
+          "language" : "swift",
+          "platform" : "android"
+        }
+      ],
+      "specName" : "Math"
+    }
+  ],
+  "schemaVersion" : 1
+}

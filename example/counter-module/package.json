@@ -1,0 +1,26 @@
+{
+  "name": "react-native-swiftstitch-counter",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Counter HybridObject example powered by nitrogen-swift-input.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "codegen": "./codegen.sh"
+  },
+  "files": [
+    "src",
+    "specs",
+    "nitrogen",
+    "swift",
+    "android",
+    "NitroCounter.podspec",
+    "react-native.config.js",
+    "nitro.json"
+  ],
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-nitro-modules": ">=0"
+  }
+}

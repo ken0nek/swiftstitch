@@ -1,0 +1,66 @@
+{
+  "objects" : [
+    {
+      "className" : "HybridCounter",
+      "methods" : [
+        {
+          "isThrowing" : true,
+          "name" : "increment",
+          "parameters" : [
+
+          ],
+          "returnType" : {
+            "kind" : "void"
+          }
+        },
+        {
+          "isThrowing" : true,
+          "name" : "reset",
+          "parameters" : [
+
+          ],
+          "returnType" : {
+            "kind" : "void"
+          }
+        },
+        {
+          "isThrowing" : true,
+          "name" : "value",
+          "parameters" : [
+
+          ],
+          "returnType" : {
+            "kind" : "int64"
+          }
+        },
+        {
+          "isThrowing" : true,
+          "name" : "add",
+          "parameters" : [
+            {
+              "label" : "delta",
+              "type" : {
+                "kind" : "int64"
+              }
+            }
+          ],
+          "returnType" : {
+            "kind" : "int64"
+          }
+        }
+      ],
+      "platforms" : [
+        {
+          "language" : "swift",
+          "platform" : "ios"
+        },
+        {
+          "language" : "kotlin",
+          "platform" : "android"
+        }
+      ],
+      "specName" : "Counter"
+    }
+  ],
+  "schemaVersion" : 1
+}
