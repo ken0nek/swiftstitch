@@ -20,10 +20,15 @@ target platform.
 | `nitrogen-swift-bridgejs` | …you already run JavaScriptKit's BridgeJS and want to feed its IR into nitrogen | Bun 1.x (no Swift) | `BridgeJS.json` | `<Name>.nitro.ts` | 🚧 migrating |
 | `nitrogen-swift-spec-input` | …you want to skip the `.nitro.ts` artifact and feed IR JSON straight into nitrogen | Bun 1.x | IR JSON (`.ir.json`) | `nitrogen/generated/` (in-process, no `.nitro.ts`) | 🚧 migrating |
 | `nitrogen-swift-runtime` | …you're on Swift 6.3+ and want a `@HybridObject(ios:android:)` macro to emit the C bridge inline (no `+CBridge.swift` artifact) | Swift 6.3.1 | `Hybrid<Name>.swift` with `@HybridObject(...)` | `@c(<C-name>)` peer functions (compile-time) | 🚧 migrating |
-| `nitrogen-swift-embedded` | …you want first-class Swift on Android with no Swift stdlib in the APK | Swift 6.3.1 + Android NDK r27+ | IR JSON + user Swift impl dir | `+CBridge.swift`, `Hybrid<Foo>.hpp`, Embedded `.o` | 🚧 migrating |
+| [`nitrogen-swift-embedded`](packages/nitrogen-swift-embedded/) | …you want first-class Swift on Android with no Swift stdlib in the APK | Swift 6.3.1 + Android NDK r27+ | IR JSON + user Swift impl dir | `+CBridge.swift`, `Hybrid<Foo>.hpp`, Embedded `.o` | ✅ shipped |
 | `swiftstitch` | …you want a single CLI that wraps `bun nitrogen` + the Android alongside-pass | Bun 1.x, TypeScript 5 | Existing nitro project (`nitro.json` + sources) | Coordinated end-to-end run | 🚧 planned |
 
 🚧 = not yet in this repo — lands as its package migrates in.
+
+`nitrogen-swift-embedded` ships the codegen and the Embedded-Swift compile
+step, but not yet the automation around them: driving that pipeline from
+`bun nitro` needs the alongside-pass, which arrives with
+`nitrogen-swift-spec-input`. Today you invoke its CLI directly.
 
 ## Picking a pipeline
 
@@ -59,6 +64,11 @@ bun install                                                  # populates node_mo
 swift build --package-path packages/nitrogen-swift-input
 swift test  --package-path packages/nitrogen-swift-input
 ```
+
+`./scripts/ci-local.sh` runs the suites for every Swift package in one go and
+exits non-zero if any fails. It leads with a toolchain preflight, because
+`nitrogen-swift-embedded`'s compile and end-to-end tests **fail rather than
+skip** when Swift 6.3+ or the Android NDK are missing.
 
 The CLI favors zero-flag defaults: `nitrogen-swift-input init <Name>`
 scaffolds `swift/Hybrid<Name>.swift` and chains into a first emit;
@@ -124,5 +134,6 @@ Per-package toolchain floors are listed in the table at the top.
 Docs live next to the code: each package ships a README (executive summary)
 plus a `RUNBOOK.md` covering CLI semantics, architecture, and the test
 surface — see [`packages/nitrogen-swift-input/`](packages/nitrogen-swift-input/)
-for the shipped one, and [`example/README.md`](example/README.md) for the
+and [`packages/nitrogen-swift-embedded/`](packages/nitrogen-swift-embedded/)
+for the shipped ones, and [`example/README.md`](example/README.md) for the
 example layout.

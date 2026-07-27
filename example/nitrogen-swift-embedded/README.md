@@ -1,7 +1,14 @@
 # Example: nitrogen-swift-embedded *(stub)*
 
-🚧 **Not yet runnable.** This directory will hold a runnable walkthrough
-once `packages/nitrogen-swift-embedded/` lands.
+🚧 **Not yet runnable.** The package itself has landed —
+[`packages/nitrogen-swift-embedded/`](../../packages/nitrogen-swift-embedded/)
+ships `emit` / `emit-cpp` / `compile` with its suite green. What's missing is
+the walkthrough: this directory will hold a runnable one once there's a
+harness that drives the CLI end to end without a full native build.
+
+Until then, [that package's RUNBOOK](../../packages/nitrogen-swift-embedded/RUNBOOK.md)
+carries a copy-pasteable worked example, and its `EndToEndIntegrationTests`
+is the executable version of this walkthrough.
 
 ## What this example will demonstrate
 
@@ -17,27 +24,34 @@ First-class Swift on Android with **no Swift runtime in the APK**:
 
 ```
 specs/Counter.ir.json + swift/HybridCounter.swift
-   │  nitrogen-swift-embedded emit
+   │  nitrogen-swift-embedded emit   /   emit-cpp
    ▼
-{Hybrid<Foo>+CBridge.swift,  Hybrid<Foo>.hpp,  CMakeLists.txt fragment}
+{Hybrid<Foo>+CBridge.swift,  Hybrid<Foo>.hpp}
+   │  nitrogen-swift-embedded compile
    │  swiftc -target *-none-none-elf -enable-experimental-feature Embedded
    │         -enable-experimental-feature CImplementation -wmo -parse-as-library -c
    ▼
 build/<abi>/Hybrid<Foo>.o
-   │  Android NDK linker (driven by the emitted CMake recipe)
+   │  Android NDK linker — you drive this; the CLI stops at the .o
    ▼
 libMyApp.so   ← contains Embedded Swift code, links bionic + libc++_shared only
 ```
 
+Note the package emits the bridge and the C++ glue, **not** the Android CMake
+fragment — that lives in nitrogen core and arrives with the alongside-pass in
+`nitrogen-swift-spec-input`. Until then the link step is yours to wire up.
+
 | | |
 |---|---|
 | **Prepare** | IR JSON (from `nitrogen-swift-input` or `-bridgejs`) + the directory holding `Hybrid<Name>.swift` impl files. |
-| **Generates** | `+CBridge.swift`, `Hybrid<Foo>.hpp`, CMake fragment, and `.o` per ABI. |
+| **Generates** | `+CBridge.swift`, `Hybrid<Foo>.hpp`, and the `.o` per ABI. Not the CMake fragment. |
 | **Min toolchain** | Swift 6.3.1 + Android NDK r27+. |
 | **Runtime story** | Lives in [`../rn-app/`](../rn-app/) once that lands. |
 
-The example will gate the NDK link step on toolchain detection — it skips
-cleanly if `NITRO_SWIFTC` or the NDK isn't installed.
+The example will gate the NDK link step on toolchain detection. Note that the
+*package's own* tests do not gate that way — they use
+`Issue.record("...; skipping")`, which records a failure, so they go red
+without Swift 6.3+ and the NDK rather than skipping.
 
 ## Environment
 
@@ -48,5 +62,8 @@ cleanly if `NITRO_SWIFTC` or the NDK isn't installed.
 
 ## See also
 
-- [`packages/nitrogen-swift-embedded/`](../../packages/) *(not yet present)*
+- [`packages/nitrogen-swift-embedded/`](../../packages/nitrogen-swift-embedded/) —
+  the shipped package: [README](../../packages/nitrogen-swift-embedded/README.md)
+  for the summary, [RUNBOOK](../../packages/nitrogen-swift-embedded/RUNBOOK.md)
+  for the worked example and full CLI surface.
 - [`../nitrogen-swift-runtime/`](../nitrogen-swift-runtime/) — alternative C-bridge emission via Swift macro.
