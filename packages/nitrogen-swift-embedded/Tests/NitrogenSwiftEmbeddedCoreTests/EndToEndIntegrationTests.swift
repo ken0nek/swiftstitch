@@ -7,19 +7,15 @@ import Testing
 ///
 /// Verifies the Phase 2C dream path actually produces a single-`.so` Android
 /// artifact with no per-Hybrid Swift `.so` and no Swift stdlib in jniLibs.
-/// Skips if either toolchain prerequisite is missing.
 @Suite("Phase 2C end-to-end: Swift → .o → Android .so")
 struct EndToEndIntegrationTests {
-    @Test("HybridSimpleMath: full pipeline produces a single .so with @c symbols and only bionic deps")
+    @Test(
+        "HybridSimpleMath: full pipeline produces a single .so with @c symbols and only bionic deps",
+        .enabled(if: ToolchainAvailability.hasSwift63 && ToolchainAvailability.hasAndroidNDK)
+    )
     func fullPipeline() throws {
-        guard let swiftc = locateSwift63Swiftc() else {
-            Issue.record("Swift 6.3+ toolchain not installed; skipping")
-            return
-        }
-        guard let ndkClang = locateAndroidClang() else {
-            Issue.record("Android NDK not found; skipping")
-            return
-        }
+        let swiftc = locateSwift63Swiftc()!
+        let ndkClang = locateAndroidClang()!
 
         let workDir = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("nse-e2e-\(UUID().uuidString)")
@@ -158,63 +154,9 @@ struct EndToEndIntegrationTests {
     }
 
     // MARK: - Toolchain probes
-
-    private func locateSwift63Swiftc() -> URL? {
-        let candidates = [
-            "~/Library/Developer/Toolchains/swift-6.3.1-RELEASE.xctoolchain/usr/bin/swiftc",
-            "~/Library/Developer/Toolchains/swift-6.3.0-RELEASE.xctoolchain/usr/bin/swiftc",
-            "~/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin/swiftc",
-        ]
-        for raw in candidates {
-            let expanded = NSString(string: raw).expandingTildeInPath
-            if FileManager.default.fileExists(atPath: expanded) {
-                return URL(fileURLWithPath: expanded)
-            }
-        }
-        return nil
-    }
-
-    private func ndkRoot() throws -> URL {
-        let candidates = [
-            "~/Library/Android/sdk/ndk",
-            "/opt/android-sdk/ndk",
-        ]
-        for raw in candidates {
-            let dir = NSString(string: raw).expandingTildeInPath
-            guard let entries = try? FileManager.default.contentsOfDirectory(atPath: dir) else { continue }
-            // Pick highest version.
-            let sorted = entries.sorted().reversed()
-            for entry in sorted {
-                let candidate = URL(fileURLWithPath: dir).appendingPathComponent(entry)
-                let prebuilt = candidate
-                    .appendingPathComponent("toolchains/llvm/prebuilt")
-                if FileManager.default.fileExists(atPath: prebuilt.path) {
-                    return candidate
-                }
-            }
-        }
-        struct NoNDK: Error, CustomStringConvertible { var description: String { "NDK not found" } }
-        throw NoNDK()
-    }
-
-    private func locateAndroidClang() -> URL? {
-        guard let root = try? ndkRoot() else { return nil }
-        let prebuilt = root.appendingPathComponent("toolchains/llvm/prebuilt")
-        guard let archDirs = try? FileManager.default.contentsOfDirectory(atPath: prebuilt.path) else {
-            return nil
-        }
-        for arch in archDirs {
-            let bin = prebuilt.appendingPathComponent(arch).appendingPathComponent("bin")
-            // Try API levels 28..36, descending.
-            for api in (28...36).reversed() {
-                let candidate = bin.appendingPathComponent("aarch64-linux-android\(api)-clang++")
-                if FileManager.default.fileExists(atPath: candidate.path) {
-                    return candidate
-                }
-            }
-        }
-        return nil
-    }
+    //
+    // `locateSwift63Swiftc()`, `locateAndroidClang()`, and `ndkRoot()` live in
+    // ToolchainAvailability.swift as shared internal free functions.
 
     private func dynamicNeededLibs(of soURL: URL, ndkRoot: URL) throws -> [String] {
         let readelf = try llvmTool("llvm-readelf", ndkRoot: ndkRoot)

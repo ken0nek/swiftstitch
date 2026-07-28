@@ -182,15 +182,29 @@ func runEmit(_ argv: ArraySlice<String>) throws {
 }
 
 func executeEmit(options: EmitOptions) throws {
-    // 1. Resolve inputs (defaulted glob if --input wasn't supplied).
-    let inputs = options.inputs.isEmpty
-        ? discoverDefaultInputs(in: defaultSwiftSourceDir)
-        : options.inputs
-    if inputs.isEmpty {
-        throw CLIError.noInputs(scannedDir: defaultSwiftSourceDir)
+    // 1. Load nitro.json once, if present. Missing file is fine; malformed is
+    //    not. This has to happen before input discovery: `swiftstitch.userSwiftDir`
+    //    names the directory to scan, so reading it later would leave the
+    //    setting declarable-but-unhonored.
+    let nitroJSON: NitroJSON?
+    do {
+        nitroJSON = try NitroJSONReader.load(at: defaultNitroJSONPath)
+    } catch let err as NitroJSONError {
+        throw CLIError.nitroJSON(err)
     }
 
-    // 2. Resolve outputs (default both to `specs/` only when neither is set;
+    // 2. Resolve inputs (defaulted glob if --input wasn't supplied). Explicit
+    //    --input still wins wholesale; otherwise scan whatever
+    //    `swiftstitch.userSwiftDir` declares, falling back to `swift/`.
+    let swiftSourceDir = nitroJSON?.swiftstitch?.userSwiftDir ?? defaultSwiftSourceDir
+    let inputs = options.inputs.isEmpty
+        ? discoverDefaultInputs(in: swiftSourceDir)
+        : options.inputs
+    if inputs.isEmpty {
+        throw CLIError.noInputs(scannedDir: swiftSourceDir)
+    }
+
+    // 3. Resolve outputs (default both to `specs/` only when neither is set;
     //    if the user named one explicitly we honor the "TS-only" / "JSON-only"
     //    opt-in).
     let outDir: String?
@@ -201,14 +215,6 @@ func executeEmit(options: EmitOptions) throws {
     } else {
         outDir = options.outDir
         outJSONDir = options.outJSONDir
-    }
-
-    // 3. Load nitro.json once, if present. Missing file is fine; malformed is not.
-    let nitroJSON: NitroJSON?
-    do {
-        nitroJSON = try NitroJSONReader.load(at: defaultNitroJSONPath)
-    } catch let err as NitroJSONError {
-        throw CLIError.nitroJSON(err)
     }
 
     // 4. Parse each input with empty platforms — we re-stamp per spec next.

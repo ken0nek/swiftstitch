@@ -166,3 +166,7 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Android build output
+example/*/android/build/
+example/*/android/.cxx/

@@ -1,0 +1,63 @@
+{
+  "objects" : [
+    {
+      "className" : "HybridSimpleMath",
+      "methods" : [
+        {
+          "isThrowing" : false,
+          "name" : "add",
+          "parameters" : [
+            {
+              "label" : "a",
+              "type" : {
+                "kind" : "double"
+              }
+            },
+            {
+              "label" : "b",
+              "type" : {
+                "kind" : "double"
+              }
+            }
+          ],
+          "returnType" : {
+            "kind" : "double"
+          }
+        },
+        {
+          "isThrowing" : false,
+          "name" : "multiply",
+          "parameters" : [
+            {
+              "label" : "a",
+              "type" : {
+                "kind" : "double"
+              }
+            },
+            {
+              "label" : "b",
+              "type" : {
+                "kind" : "double"
+              }
+            }
+          ],
+          "returnType" : {
+            "kind" : "double"
+          }
+        }
+      ],
+      "platforms" : [
+        {
+          "language" : "swift",
+          "platform" : "ios"
+        },
+        {
+          "language" : "c++",
+          "platform" : "android"
+        }
+      ],
+      "specName" : "SimpleMath"
+    }
+  ],
+  "schemaVersion" : 1
+}

@@ -3,33 +3,14 @@ import Testing
 @testable import NitrogenSwiftEmbeddedCore
 @testable import NitrogenSwiftInputCore
 
-/// These tests need a Swift 6.3+ toolchain on disk because Embedded Swift +
-/// `@c` shipped in 6.3. If `~/Library/Developer/Toolchains/swift-6.3.x...` is
-/// missing the test is skipped — the spike is reproducible but only in
-/// environments that have done `swiftly install 6.3.1`.
-private func locateSwift63Toolchain() -> URL? {
-    let candidates = [
-        "~/Library/Developer/Toolchains/swift-6.3.1-RELEASE.xctoolchain/usr/bin/swiftc",
-        "~/Library/Developer/Toolchains/swift-6.3.0-RELEASE.xctoolchain/usr/bin/swiftc",
-        "~/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin/swiftc",
-    ]
-    for raw in candidates {
-        let expanded = NSString(string: raw).expandingTildeInPath
-        if FileManager.default.fileExists(atPath: expanded) {
-            return URL(fileURLWithPath: expanded)
-        }
-    }
-    return nil
-}
-
 @Suite("EmbeddedCompiler")
 struct EmbeddedCompilerTests {
-    @Test("compiles a HybridSimpleMath fixture to aarch64 elf object")
+    @Test(
+        "compiles a HybridSimpleMath fixture to aarch64 elf object",
+        .enabled(if: ToolchainAvailability.hasSwift63)
+    )
     func compilesToObject() throws {
-        guard let swiftc = locateSwift63Toolchain() else {
-            Issue.record("Swift 6.3+ toolchain not installed; skipping")
-            return
-        }
+        let swiftc = locateSwift63Swiftc()!
 
         let workDir = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("embedded-compile-\(UUID().uuidString)")

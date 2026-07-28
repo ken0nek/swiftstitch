@@ -45,7 +45,14 @@ public enum NitroJSONReader {
 }
 
 public struct NitroJSON: Decodable, Sendable, Equatable {
+    public let cxxNamespace: [String]?
+    public let android: AndroidConfig?
     public let autolinking: [String: Autolinking]?
+    public let swiftstitch: SwiftStitchConfig?
+
+    public struct AndroidConfig: Decodable, Sendable, Equatable {
+        public let androidCxxLibName: String?
+    }
 
     public struct Autolinking: Decodable, Sendable, Equatable {
         public let ios: PlatformDecl?
@@ -54,6 +61,14 @@ public struct NitroJSON: Decodable, Sendable, Equatable {
 
     public struct PlatformDecl: Decodable, Sendable, Equatable {
         public let language: String?
+        public let implementationClassName: String?
+    }
+
+    /// Read by SwiftStitch, ignored by nitrogen (which strips unknown
+    /// top-level keys at parse). See the plugin's alongside pass.
+    public struct SwiftStitchConfig: Decodable, Sendable, Equatable {
+        public let userSwiftDir: String
+        public let swiftOnAndroid: [String]
     }
 }
 

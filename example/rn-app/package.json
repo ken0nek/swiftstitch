@@ -15,7 +15,8 @@
     "@react-native/new-app-screen": "0.85.2",
     "react-native-nitro-modules": "^0.36.1",
     "react-native-safe-area-context": "^5.5.2",
-    "react-native-swiftstitch-counter": "file:../counter-module"
+    "react-native-swiftstitch-counter": "file:../counter-module",
+    "react-native-swiftstitch-math": "file:../math-module"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

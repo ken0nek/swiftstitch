@@ -22,6 +22,13 @@ react {
     //   skip the bundling of the JS bundle and the assets. Default is "debug", "debugOptimized".
     //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
     // debuggableVariants = ["liteDebug", "liteDebugOptimized", "prodDebug", "prodDebugOptimized"]
+    //
+    //   Empty on purpose: no variant is treated as dev-server-backed, so the
+    //   debug APK bakes `index.android.bundle` in and launches without Metro.
+    //   The parity bar installs and runs this APK headlessly, and must not
+    //   depend on packager startup timing or port availability. Accepted cost:
+    //   every debug build now runs Metro's bundler, and fast-refresh is gone.
+    debuggableVariants = []
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.

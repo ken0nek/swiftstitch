@@ -1,0 +1,15 @@
+{
+  "name": "swiftstitch",
+  "version": "0.2.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "bin": { "swiftstitch": "./src/cli.ts" },
+  "scripts": { "test": "bun test", "typecheck": "tsc --noEmit" },
+  "peerDependencies": { "react-native-nitro-modules": ">=0.36.1" },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.6.0",
+    "react-native-nitro-modules": "^0.36.1"
+  }
+}

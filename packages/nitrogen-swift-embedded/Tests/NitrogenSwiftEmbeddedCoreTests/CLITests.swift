@@ -118,18 +118,17 @@ struct CLITests {
         #expect(contents.contains("namespace margelo::nitro::test {"))
     }
 
-    @Test("compile subcommand drives swiftc end-to-end")
+    @Test(
+        "compile subcommand drives swiftc end-to-end",
+        .enabled(if: ToolchainAvailability.hasSwift63)
+    )
     func cliCompileProducesObject() throws {
         let workspaceRoot = try resolveWorkspaceRoot()
         let cli = workspaceRoot
             .appendingPathComponent("packages/nitrogen-swift-embedded/.build/debug/nitrogen-swift-embedded")
         try #require(FileManager.default.fileExists(atPath: cli.path))
 
-        let swiftc = locateSwift63Swiftc()
-        guard let swiftc else {
-            Issue.record("Swift 6.3+ toolchain not installed; skipping")
-            return
-        }
+        let swiftc = locateSwift63Swiftc()!
 
         let workDir = workspaceRoot
             .appendingPathComponent("packages/nitrogen-swift-embedded/.build/cli-tests")
@@ -208,19 +207,24 @@ struct CLITests {
         #expect(result.stderr.contains("unknown flag"))
     }
 
-    private func locateSwift63Swiftc() -> URL? {
-        let candidates = [
-            "~/Library/Developer/Toolchains/swift-6.3.1-RELEASE.xctoolchain/usr/bin/swiftc",
-            "~/Library/Developer/Toolchains/swift-6.3.0-RELEASE.xctoolchain/usr/bin/swiftc",
-            "~/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin/swiftc",
-        ]
-        for raw in candidates {
-            let expanded = NSString(string: raw).expandingTildeInPath
-            if FileManager.default.fileExists(atPath: expanded) {
-                return URL(fileURLWithPath: expanded)
-            }
-        }
-        return nil
+    @Test("alongside rejects a nitro.json that isn't there, rather than reporting no-op")
+    func cliRejectsMissingNitroJSON() throws {
+        let workspaceRoot = try resolveWorkspaceRoot()
+        let cli = workspaceRoot
+            .appendingPathComponent("packages/nitrogen-swift-embedded/.build/debug/nitrogen-swift-embedded")
+        try #require(FileManager.default.fileExists(atPath: cli.path))
+
+        let missing = workspaceRoot.appendingPathComponent("no-such-module/nitro.json")
+        let result = try runProcess(
+            executable: cli,
+            arguments: ["alongside", "--nitro-json", missing.path],
+            cwd: workspaceRoot
+        )
+        #expect(result.exitCode != 0)
+        #expect(result.stderr.contains("file not found"))
+        // A typo'd path must not claim the file was read and found blockless —
+        // that message sent Task 3's `swiftstitch build` down a false-success path.
+        #expect(!result.stdout.contains("nothing to do"))
     }
 
     private func resolveWorkspaceRoot() throws -> URL {

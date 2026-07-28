@@ -1,6 +1,12 @@
 /**
- * SwiftStitch RN example — exercises the `Counter` HybridObject defined in
- * `swift/HybridCounter.swift` and wired through nitrogen.
+ * SwiftStitch RN example — exercises two HybridObjects, each defined by a
+ * single Swift file and wired through nitrogen:
+ *
+ * - `Counter` (counter-module) — Swift on iOS, Kotlin on Android.
+ * - `SimpleMath` (math-module) — the same Swift file on both, compiled to
+ *   Embedded Swift for Android. It is exercised from `index.js`, not from
+ *   here, so that a counter-module failure in this component cannot stop the
+ *   parity bar's logcat line from being emitted.
  */
 
 import { useMemo, useState } from 'react';

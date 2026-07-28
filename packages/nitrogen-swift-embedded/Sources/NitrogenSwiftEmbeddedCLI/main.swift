@@ -9,11 +9,16 @@ import NitrogenSwiftInputCore
 //                                     --bridge-dir <dir> --out-o <path> \
 //                                     [--arch aarch64|x86_64|armv7] \
 //                                     --swiftc <path>
+//   nitrogen-swift-embedded alongside --nitro-json <path> \
+//                                     [--out-dir <dir>] [--ir-dir <dir>]
 //
 // `emit` produces +CBridge.swift (Swift @c shims).
 // `emit-cpp` produces <Class>.hpp (the C++ subclass that forwards to @c).
 // `compile` invokes a Swift 6.3+ toolchain to produce the Android-NDK-linkable
 // `.o` for the host `.so`.
+// `alongside` runs after `bunx nitrogen` and does all three of the above's
+// emitting for every spec in nitro.json's `swiftstitch` block, into
+// `swiftstitch/generated/` — our tree, outside the one nitrogen sweeps.
 
 enum CLIError: Error, CustomStringConvertible {
     case usage(String)
@@ -151,11 +156,60 @@ func runCompile(_ iter: inout IndexingIterator<[String]>) throws {
     FileHandle.standardOutput.write(Data("compiled \(outOIn) (\(arch.rawValue))\n".utf8))
 }
 
+func runAlongside(_ iter: inout IndexingIterator<[String]>) throws {
+    var nitroJSONPath: String?
+    var outDir: String?
+    var irDir: String?
+    while let arg = iter.next() {
+        switch arg {
+        case "--nitro-json": nitroJSONPath = iter.next()
+        case "--out-dir": outDir = iter.next()
+        case "--ir-dir": irDir = iter.next()
+        default:
+            throw CLIError.usage("unknown flag `\(arg)`")
+        }
+    }
+    guard let nitroJSON = nitroJSONPath else { throw CLIError.usage("--nitro-json is required") }
+
+    // Unlike `nitrogen-swift-input emit`, where nitro.json is an optional
+    // convenience input, it is this subcommand's only input — so a path that
+    // isn't there is a misconfiguration, not a module that opted out. Without
+    // this the pass would report "no `swiftstitch` block", which would be a
+    // false statement about a file it never read.
+    let nitroJSONURL = URL(fileURLWithPath: nitroJSON)
+    guard FileManager.default.fileExists(atPath: nitroJSONURL.path) else {
+        throw CLIError.fileNotFound(nitroJSON)
+    }
+
+    // The IR and output directories are module-relative conventions (`specs/`,
+    // what `nitrogen-swift-input emit` writes; `swiftstitch/generated/`, our
+    // own tree), so resolve both against nitro.json's directory rather than
+    // the caller's cwd.
+    let moduleDir = nitroJSONURL.deletingLastPathComponent()
+    let resolvedIRDir = URL(fileURLWithPath: irDir ?? "specs", relativeTo: moduleDir).path
+    let resolvedOutDir = URL(
+        fileURLWithPath: outDir ?? "swiftstitch/generated", relativeTo: moduleDir).path
+
+    let written = try AlongsideRunner.run(
+        nitroJSONPath: nitroJSON,
+        outDir: resolvedOutDir,
+        irDir: resolvedIRDir
+    )
+    guard !written.isEmpty else {
+        FileHandle.standardOutput.write(
+            Data("alongside: no `swiftstitch` block in \(nitroJSON), nothing to do\n".utf8))
+        return
+    }
+    for path in written {
+        FileHandle.standardOutput.write(Data("emitted \(path)\n".utf8))
+    }
+}
+
 func run(_ argv: [String]) throws {
     var iter = argv.makeIterator()
     _ = iter.next()
     guard let command = iter.next() else {
-        throw CLIError.usage("nitrogen-swift-embedded emit|compile ...")
+        throw CLIError.usage("nitrogen-swift-embedded emit|emit-cpp|compile|alongside ...")
     }
     switch command {
     case "emit":
@@ -164,8 +218,10 @@ func run(_ argv: [String]) throws {
         try runEmitCpp(&iter)
     case "compile":
         try runCompile(&iter)
+    case "alongside":
+        try runAlongside(&iter)
     default:
-        throw CLIError.usage("unknown command `\(command)` (use emit|emit-cpp|compile)")
+        throw CLIError.usage("unknown command `\(command)` (use emit|emit-cpp|compile|alongside)")
     }
 }
 

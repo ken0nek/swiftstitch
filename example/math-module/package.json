@@ -1,0 +1,26 @@
+{
+  "name": "react-native-swiftstitch-math",
+  "version": "0.0.1",
+  "private": true,
+  "description": "SimpleMath HybridObject example — Swift on Android via nitrogen-swift-embedded.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src",
+    "specs",
+    "nitrogen",
+    "swift",
+    "android",
+    "react-native.config.js",
+    "nitro.json"
+  ],
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-nitro-modules": ">=0"
+  },
+  "devDependencies": {
+    "nitrogen": "^0.36.1",
+    "react-native-nitro-modules": "^0.36.1"
+  }
+}

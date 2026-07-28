@@ -20,11 +20,15 @@ Two things this package deliberately does **not** do:
 
 - **It does not link.** `compile` stops at the `.o`; you link it into your
   host `.so` with NDK clang.
-- **It does not generate the Android CMake fragment.** That lives in nitrogen
-  core and arrives with the alongside-pass (`nitrogen-swift-spec-input`).
+- **It does generate the Android CMake fragment** — see `CMakeFragmentEmitter`
+  and the `alongside` subcommand below.
 
-Until that alongside-pass lands, `bun nitro` does not drive this pipeline —
-you invoke the CLI yourself, or from your own build script.
+The `alongside` subcommand is the driver: run after `bunx nitrogen`, it writes
+the `@c` bridge, the C++ glue header, and the CMake fragment into
+`swiftstitch/generated/` — its own tree, sitting alongside `nitrogen/generated/`
+rather than inside it, so nitrogen's cleanup never reaches them.
+`swiftstitch build` chains the whole pipeline for you; you can also invoke this
+CLI directly from your own build script.
 
 ## Toolchain
 
@@ -34,10 +38,11 @@ you invoke the CLI yourself, or from your own build script.
 | Run `compile` | Swift **6.3+** — `@c` and Embedded mode are 6.3-only |
 | Link the `.o` | Android **NDK r27+** (not invoked by this CLI) |
 
-Point `--swiftc` at an explicit 6.3.x toolchain. The test helpers fall back
-through `swift-6.3.1-RELEASE` → `swift-6.3.0-RELEASE` →
-`swift-latest.xctoolchain`, and `swift-latest` is a symlink that may resolve
-below 6.3 — which fails confusingly rather than cleanly.
+Point `--swiftc` at an explicit 6.3.x toolchain. The test helpers probe exactly
+two paths — `swift-6.3.1-RELEASE` then `swift-6.3.0-RELEASE`, under
+`~/Library/Developer/Toolchains/`. `swift-latest.xctoolchain` is deliberately
+not among them: it can resolve below 6.3 and would make the probe claim a
+toolchain it does not have.
 
 ## Build
 
@@ -96,8 +101,10 @@ it needs an out-param error channel and is a tracked follow-up.
 ## Architectures
 
 `aarch64-none-none-elf`, `x86_64-unknown-none-elf`, `armv7-none-none-eabi`.
-Only `aarch64` (Android `arm64-v8a`) has been live-tested; multi-ABI is out of
-scope for now.
+Only `aarch64` (Android `arm64-v8a`) is covered by a test — compile, NDK link,
+and `DT_NEEDED` assertions. The other two are emitted but unexercised, and
+nothing here has yet run on a device or emulator; multi-ABI is out of scope for
+now.
 
 ## Tests
 
@@ -105,18 +112,20 @@ scope for now.
 swift test --package-path packages/nitrogen-swift-embedded
 ```
 
-15 tests. Twelve are pure emitter/golden checks; two invoke a real Swift 6.3
-`swiftc`; one runs the full pipeline through an NDK link and asserts
+23 tests. Twenty are pure emitter/golden/CLI checks; two invoke a real Swift
+6.3 `swiftc`; one runs the full pipeline through an NDK link and asserts
 `DT_NEEDED` is bionic-only with the `@c` symbols exported.
 
-**Those three do not skip without a toolchain — they fail.** Their guards use
-`Issue.record("...; skipping")`, which in swift-testing records a *failure*.
-Read "15/15" as a claim about a machine with Swift 6.3+ and NDK r27+
-installed. Suite-by-suite map: [`RUNBOOK.md`](RUNBOOK.md) § Tests.
+**Those three skip — they do not fail — without a toolchain.** Their
+conditions live in `.enabled(if:)` traits, so swift-testing reports them as
+skipped rather than recording a failure. Read "23/23" as a claim about a
+machine with Swift 6.3+ and NDK r27+ installed; on a bare machine expect the
+same run to pass with three skipped. Suite-by-suite map:
+[`RUNBOOK.md`](RUNBOOK.md) § Tests.
 
 ## Status
 
-Shipped — the second SwiftStitch package in this repo. What's still missing is
-the automation around it: the alongside-pass that makes `bun nitro` invoke
-this pipeline lands with `nitrogen-swift-spec-input`. See the root README's
-package table.
+Shipped — the second SwiftStitch package in this repo, and the host of the
+Swift × Android alongside-pass (`alongside`). The one-command wrapper around
+it is the `swiftstitch` package. `nitrogen-swift-spec-input` is untouched v0.3
+work and hosts nothing in this pipeline. See the root README's package table.

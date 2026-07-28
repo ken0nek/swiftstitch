@@ -111,7 +111,7 @@ Two subcommands. Bare invocation prints usage to stderr and exits `64`.
 
 | What | Resolution | Failure mode |
 |---|---|---|
-| Inputs | `--input` (repeatable, exact paths) — else glob `swift/Hybrid*.swift` relative to CWD (non-recursive, sorted). | Empty set → error `no `Hybrid*.swift` files in swift/`. |
+| Inputs | `--input` (repeatable, exact paths) — else glob `<dir>/Hybrid*.swift` relative to CWD (non-recursive, sorted), where `<dir>` is `swiftstitch.userSwiftDir` from `nitro.json` if that block is present, otherwise `swift/`. | Empty set → error naming the directory actually scanned. |
 | Outputs | Neither flag → **both** artifacts to `specs/`. Exactly one flag → **only** that artifact (TS-only / JSON-only opt-in). Both flags → both, to their dirs. | Write failure → error. Output dirs are created as needed. |
 | Platforms (per spec) | CLI flags win **wholesale** if any are present (no per-platform mixing with `nitro.json`). Else `nitro.json` `autolinking.<SpecName>.{ios,android}.language`. | Empty after resolution → error `no platforms for spec`. |
 | `nitro.json` | Loaded once from `./nitro.json` (CWD-relative — per-package scripts `cd` first). Missing file is fine (→ flags-only). | Malformed file is a **hard error**, never a silent fallback. |
@@ -166,7 +166,7 @@ entry too. See § Known gaps.
 |---|---|
 | `error: '<name>' is not a valid spec name (expected a Swift identifier like `Counter`)` | `init` got a non-identifier, or just `Hybrid`. |
 | `error: <path> already exists (pass --force to overwrite)` | `init` refuses to clobber an existing Swift file. |
-| ``error: no `Hybrid*.swift` files in swift/ (pass --input <path> if your sources live elsewhere)`` | Default glob found nothing. |
+| ``error: no `Hybrid*.swift` files in <dir> (pass --input <path> if your sources live elsewhere)`` | Default glob found nothing. `<dir>` is `swiftstitch.userSwiftDir` when nitro.json declares one, else `swift/`. |
 | ``error: no platforms for spec `X` — pass --ios <lang> / --android <lang> or add `autolinking.X` to nitro.json`` | Spec resolved to zero platform bindings. |
 | `error: <path> is not valid nitro.json: …` | `nitro.json` exists but doesn't decode — fixed, never silently ignored. |
 | `error: --ios: unsupported language `x` (expected swift / kotlin / cpp)` | Bad `--ios`/`--android` value. |

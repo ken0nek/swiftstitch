@@ -1,0 +1,22 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["math"],
+  "ios": {
+    "iosModuleName": "NitroMath"
+  },
+  "android": {
+    "androidNamespace": ["math"],
+    "androidCxxLibName": "NitroMath"
+  },
+  "autolinking": {
+    "SimpleMath": {
+      "ios": { "language": "swift", "implementationClassName": "HybridSimpleMath" },
+      "android": { "language": "c++", "implementationClassName": "HybridSimpleMath" }
+    }
+  },
+
+  "swiftstitch": {
+    "userSwiftDir": "swift",
+    "swiftOnAndroid": ["SimpleMath"]
+  }
+}
