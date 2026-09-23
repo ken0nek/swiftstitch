@@ -128,7 +128,8 @@ There is no `SwiftHybridObject<T>` convenience type in this version.
 Nitrogen resolves the type argument to `HybridObject<...>` syntactically
 (walking the literal object-type syntax with `ts-morph`) rather than through
 the type checker, so a type alias standing in for that argument is invisible
-to it — confirmed by spiking a minimal alias against nitrogen 0.36.1, which
+to it — confirmed by spiking a minimal alias against nitrogen 0.36.1 (and
+again against 0.37.1, with the same result), which
 failed to resolve the language even on a plain indexed access before ever
 reaching a conditional type. **That is a current nitrogen limitation, not a
 SwiftStitch design choice**; if a future nitrogen resolves aliases, this

@@ -10,6 +10,7 @@ package com.margelo.nitro.counter
 import androidx.annotation.Keep
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
+import dalvik.annotation.optimization.FastNative
 import com.margelo.nitro.core.HybridObject
 
 /**
@@ -54,6 +55,7 @@ abstract class HybridCounterSpec: HybridObject() {
   @Keep
   protected open class CxxPart(javaPart: HybridCounterSpec): HybridObject.CxxPart(javaPart) {
     // C++ JHybridCounterSpec::CxxPart::initHybrid(...)
+    @FastNative
     external override fun initHybrid(): HybridData
   }
   override fun createCxxPart(): CxxPart {

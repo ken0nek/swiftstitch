@@ -167,7 +167,7 @@ the CLI takes `--ios <lang>` and `--android <lang>` independently. This
 example uses `--ios swift` only because stock nitrogen rejects
 `android: 'swift'` today (`Language swift is not a valid language for
 android!`). Bringing first-class Swift to Android is what the rest of the
-SwiftStitch packages (`-spec-input` alongside-pass + `-embedded`) are
+SwiftStitch packages (`-embedded` and its `alongside` pass) are
 designed to plug — see the root README's package table.
 
 ## CLI flags

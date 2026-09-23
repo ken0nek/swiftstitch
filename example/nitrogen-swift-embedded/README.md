@@ -37,9 +37,10 @@ build/<abi>/Hybrid<Foo>.o
 libMyApp.so   ← contains Embedded Swift code, links bionic + libc++_shared only
 ```
 
-Note the package emits the bridge and the C++ glue, **not** the Android CMake
-fragment — that lives in nitrogen core and arrives with the alongside-pass in
-`nitrogen-swift-spec-input`. Until then the link step is yours to wire up.
+The CMake fragment that compiles and links the Embedded `.o` comes from this
+same package's `alongside` subcommand, which writes the bridge, the C++ glue,
+and the fragment to `swiftstitch/generated/` — see
+[`example/math-module/`](../math-module/) for a module wired end to end.
 
 | | |
 |---|---|
@@ -48,10 +49,10 @@ fragment — that lives in nitrogen core and arrives with the alongside-pass in
 | **Min toolchain** | Swift 6.3.1 + Android NDK r27+. |
 | **Runtime story** | Lives in [`../rn-app/`](../rn-app/) once that lands. |
 
-The example will gate the NDK link step on toolchain detection. Note that the
-*package's own* tests do not gate that way — they use
-`Issue.record("...; skipping")`, which records a failure, so they go red
-without Swift 6.3+ and the NDK rather than skipping.
+The example will gate the NDK link step on toolchain detection, as the
+package's own tests do: they carry `.enabled(if:)` traits and **skip** without
+Swift 6.3+ and the NDK, so check `./scripts/ci-local.sh`'s preflight before
+reading a green run as full coverage.
 
 ## Environment
 

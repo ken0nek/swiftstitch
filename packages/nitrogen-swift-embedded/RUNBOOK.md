@@ -229,7 +229,8 @@ That is exactly why the three files above live in `swiftstitch/generated/`
 instead. The sweep is scoped to `nitrogen/generated/` and does not reach a
 sibling directory, so a bare `bunx nitrogen` leaves all three in place and the
 next native build still finds the fragment, the bridge, and the header.
-Verified empirically against nitrogen 0.36.1 (`node_modules/nitrogen/lib/index.js`,
+Verified empirically against nitrogen 0.36.1, and re-verified against 0.37.1
+(`node_modules/nitrogen/lib/index.js`,
 `node_modules/nitrogen/lib/getFiles.js`) with planted canary files: one nested
 under `nitrogen/generated/` was deleted, one in a sibling directory was not.
 

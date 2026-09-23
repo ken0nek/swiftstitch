@@ -49,10 +49,9 @@ artifact in between. The byte-for-byte equivalence test upstream pins that
 the dream path is genuinely interchangeable with the `bun nitrogen` path.
 This example is the smallest demo of that equivalence.
 
-This package also hosts the **alongside-pass driver** that makes Swift × Android
-work without nitrogen schema changes — see
-[`../nitrogen-swift-embedded/`](../nitrogen-swift-embedded/) for the
-end-to-end Android story.
+The **alongside-pass driver** that makes Swift × Android work without nitrogen
+schema changes does *not* live here — it ships as the `alongside` subcommand of
+[`nitrogen-swift-embedded`](../nitrogen-swift-embedded/).
 
 ## See also
 
