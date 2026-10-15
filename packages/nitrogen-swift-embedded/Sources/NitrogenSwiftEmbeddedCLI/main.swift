@@ -18,7 +18,7 @@ import NitrogenSwiftInputCore
 // `.o` for the host `.so`.
 // `alongside` runs after `bunx nitrogen` and does all three of the above's
 // emitting for every spec in nitro.json's `swiftstitch` block, into
-// `swiftstitch/generated/` — our tree, outside the one nitrogen sweeps.
+// `swiftstitch/generated/`, our tree, outside the one nitrogen sweeps.
 
 enum CLIError: Error, CustomStringConvertible {
     case usage(String)
@@ -172,7 +172,7 @@ func runAlongside(_ iter: inout IndexingIterator<[String]>) throws {
     guard let nitroJSON = nitroJSONPath else { throw CLIError.usage("--nitro-json is required") }
 
     // Unlike `nitrogen-swift-input emit`, where nitro.json is an optional
-    // convenience input, it is this subcommand's only input — so a path that
+    // convenience input, it is this subcommand's only input. So a path that
     // isn't there is a misconfiguration, not a module that opted out. Without
     // this the pass would report "no `swiftstitch` block", which would be a
     // false statement about a file it never read.

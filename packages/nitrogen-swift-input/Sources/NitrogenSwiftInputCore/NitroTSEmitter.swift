@@ -1,6 +1,6 @@
 import Foundation
 
-/// Emits `.nitro.ts` source from `HybridObjectIR` values. Phase 1A.4.
+/// Emits `.nitro.ts` source from `HybridObjectIR` values.
 public enum NitroTSEmitter {
     public static func emit(_ objects: [HybridObjectIR]) -> String {
         var lines: [String] = []

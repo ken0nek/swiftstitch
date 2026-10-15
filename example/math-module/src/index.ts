@@ -4,7 +4,7 @@ import type { SimpleMath as SimpleMathSpec } from '../specs/SimpleMath.nitro';
 export type SimpleMath = SimpleMathSpec;
 
 /**
- * Returns a `SimpleMath` HybridObject backed by `HybridSimpleMath.swift` —
+ * Returns a `SimpleMath` HybridObject backed by `HybridSimpleMath.swift`,
  * the one file that is both this spec's source and, via Embedded Swift, the
  * Android implementation.
  */

@@ -1,10 +1,10 @@
 import Foundation
 
-/// Emits `<hostLibraryName>+swift-embedded.cmake` — the recipe that compiles
+/// Emits `<hostLibraryName>+swift-embedded.cmake`, the recipe that compiles
 /// each Hybrid's Swift to a no-runtime `.o` at native-build time and adds it to
 /// the host library's sources.
 ///
-/// A separate fragment, and — decisively — one that lives **outside**
+/// A separate fragment, and one that lives **outside**
 /// `nitrogen/generated/`, which is the only tree nitrogen's cleanup sweeps: it
 /// snapshots that directory recursively on every run and deletes every file it
 /// did not itself generate. Being a separate file is not what saves the recipe
@@ -14,7 +14,7 @@ import Foundation
 /// Compiling at CMake time rather than ahead of time in the pass buys per-ABI
 /// targeting for free and correct incremental rebuilds via `DEPENDS`.
 public enum CMakeFragmentEmitter {
-    /// `userSwiftDir` is baked in at generate time — it is a `nitro.json`
+    /// `userSwiftDir` is baked in at generate time. It is a `nitro.json`
     /// value, known here, and an env var would make the build depend on shell
     /// state. `NITRO_SWIFTC` stays an env var because the Swift 6.3+ toolchain
     /// path is per-machine.

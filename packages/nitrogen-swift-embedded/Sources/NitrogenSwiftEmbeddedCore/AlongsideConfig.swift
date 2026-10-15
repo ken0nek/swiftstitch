@@ -5,7 +5,7 @@ import NitrogenSwiftInputCore
 ///
 /// Opt-in is the `swiftstitch` block; nitrogen strips unknown top-level keys at
 /// parse, so the block is invisible to it. Absent block means the module wants
-/// nothing from SwiftStitch on Android — `load` returns `nil` and the pass is a
+/// nothing from SwiftStitch on Android. `load` returns `nil` and the pass is a
 /// no-op, because iOS-only authors run the same command.
 public struct AlongsideConfig: Sendable, Equatable {
     /// The spec name and the implementation class name are *both* read from
@@ -22,7 +22,7 @@ public struct AlongsideConfig: Sendable, Equatable {
         }
     }
 
-    /// `android.androidCxxLibName` — the CMake target the `.o` is added to.
+    /// `android.androidCxxLibName`, the CMake target the `.o` is added to.
     public let hostLibraryName: String
     /// Fully qualified, e.g. "margelo::nitro::embedded". Distinct from
     /// NitroJSON.cxxNamespace, which is the raw array (["embedded"]).
@@ -44,7 +44,7 @@ public struct AlongsideConfig: Sendable, Equatable {
         self.entries = entries
     }
 
-    /// Returns nil when there is no `swiftstitch` block — a no-op, not an error.
+    /// Returns nil when there is no `swiftstitch` block. That is a no-op, not an error.
     public static func load(nitroJSONPath: String) throws -> AlongsideConfig? {
         guard let nitroJSON = try NitroJSONReader.load(at: nitroJSONPath) else { return nil }
         guard let block = nitroJSON.swiftstitch else { return nil }
@@ -103,7 +103,7 @@ public enum AlongsideError: Error, CustomStringConvertible, Equatable {
             """
         case .missingIR(let spec, let expectedPath):
             return """
-            no IR for spec "\(spec)" at \(expectedPath) — run `nitrogen-swift-input emit` first
+            no IR for spec "\(spec)" at \(expectedPath). Run `nitrogen-swift-input emit` first.
             """
         case .missingUserSwift(let className, let expectedPath):
             return """

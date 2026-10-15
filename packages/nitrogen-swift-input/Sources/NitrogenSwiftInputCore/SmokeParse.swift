@@ -2,7 +2,7 @@ import SwiftParser
 import SwiftSyntax
 
 /// Minimal smoke API: parse a Swift source string and report whether it has any
-/// syntax errors. Used by Phase 1A.1 to prove the swift-syntax dependency is
+/// syntax errors. Used to prove the swift-syntax dependency is
 /// wired up before adding real `@HybridObject` extraction.
 public enum SmokeParse {
     public static func hasSyntaxErrors(_ source: String) -> Bool {

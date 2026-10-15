@@ -222,24 +222,21 @@ struct CLITests {
         )
         #expect(result.exitCode != 0)
         #expect(result.stderr.contains("file not found"))
-        // A typo'd path must not claim the file was read and found blockless —
-        // that message sent Task 3's `swiftstitch build` down a false-success path.
+        // A typo'd path must not claim the file was read and found blockless.
+        // That message sent `swiftstitch build` down a false-success path.
         #expect(!result.stdout.contains("nothing to do"))
     }
 
     private func resolveWorkspaceRoot() throws -> URL {
-        let bundleURL = Bundle.module.bundleURL
-        var candidate: URL? = bundleURL
-        for _ in 0..<10 {
-            guard let dir = candidate else { break }
+        var dir = Bundle.module.bundleURL.standardizedFileURL
+        while dir.path != "/" {
             let packageJSON = dir.appendingPathComponent("package.json")
             let pkgDir = dir.appendingPathComponent("packages")
             if FileManager.default.fileExists(atPath: packageJSON.path),
                FileManager.default.fileExists(atPath: pkgDir.path) {
                 return dir
             }
-            candidate = dir.deletingLastPathComponent()
-            if candidate == dir { break }
+            dir = dir.deletingLastPathComponent()
         }
         struct WorkspaceRootError: Error, CustomStringConvertible {
             var description: String { "could not resolve workspace root from test bundle" }

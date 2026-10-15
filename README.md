@@ -27,8 +27,8 @@ target platform.
 
 `nitrogen-swift-embedded` ships the codegen, the Embedded-Swift compile step,
 and the Android alongside-pass that drives them (`nitrogen-swift-embedded
-alongside`). `swiftstitch build` chains the whole pipeline —
-`nitrogen-swift-input emit` → `bunx nitrogen` → `alongside` — in one command;
+alongside`). `swiftstitch build` chains the whole pipeline,
+`nitrogen-swift-input emit` → `bunx nitrogen` → `alongside`, in one command;
 see [`packages/swiftstitch/RUNBOOK.md`](packages/swiftstitch/RUNBOOK.md). The
 alongside-pass does **not** live in `nitrogen-swift-spec-input`, which is
 untouched v0.3 work.
@@ -58,7 +58,7 @@ Decide three things, in this order:
 |---|---|
 | `kotlin` | Stock nitrogen flow. Kotlin code + JNI. |
 | `c++` | Stock nitrogen flow. User authors `Hybrid<Foo>.hpp`. |
-| `swift` | **Not a value you write** — stock nitrogen rejects it. Declare `c++` and opt in with a `swiftstitch` block in `nitro.json`; the alongside-pass then emits the `@c` bridge + C++ glue + a CMake recipe, and the native build runs `swiftc` in Embedded mode. No Swift runtime in `jniLibs`. Requires the `nitrogen-swift-embedded` toolchain (Swift 6.3+ + NDK r27+) at native build time. |
+| `swift` | **Not a value you write.** Stock nitrogen rejects it. Declare `c++` and opt in with a `swiftstitch` block in `nitro.json`; the alongside-pass then emits the `@c` bridge + C++ glue + a CMake recipe, and the native build runs `swiftc` in Embedded mode. No Swift runtime in `jniLibs`. Requires the `nitrogen-swift-embedded` toolchain (Swift 6.3+ + NDK r27+) at native build time. |
 
 ## Quickstart
 
@@ -72,7 +72,7 @@ swift test  --package-path packages/nitrogen-swift-input
 `swiftstitch` TypeScript package in one go, and exits non-zero if any fails.
 It leads with a toolchain preflight, because `nitrogen-swift-embedded`'s
 compile and end-to-end tests **skip** when Swift 6.3+ or the Android NDK are
-missing — so a green run on a machine without them has exercised less than a
+missing. A green run on a machine without them has exercised less than a
 green run on a machine with them.
 
 The CLI favors zero-flag defaults: `nitrogen-swift-input init <Name>`
@@ -108,32 +108,32 @@ Runnable today: [`example/nitrogen-swift-input/`](example/nitrogen-swift-input/)
 (the codegen walkthrough), [`example/counter-module/`](example/counter-module/)
 (a real consumable nitro module authored in Swift — iOS Swift + Android
 Kotlin), [`example/math-module/`](example/math-module/) (the same idea with
-Android in Swift too, via Embedded Swift — the parity bar's subject), and
+Android in Swift too, via Embedded Swift, the parity bar's subject), and
 [`example/rn-app/`](example/rn-app/) (the RN app that consumes both). The
 remaining per-package dirs are stubs that flip on as their packages migrate.
 
 ## Parity bar
 
-`example/math-module` is a Swift-on-Android module — one Swift file is both the
+`example/math-module` is a Swift-on-Android module. One Swift file is both the
 spec source *and* the Android implementation, with no hand-written Kotlin or
 C++. `scripts/parity-bar.sh` drives it through the full plugin pipeline into a
 debug APK and proves two things a unit-test suite cannot:
 
 - the shipped `lib/arm64-v8a/libNitroMath.so` has **no `libswift*` and no
-  Foundation entry** in its `DT_NEEDED` — no Swift runtime in the APK — and
-  everything it does carry is either bionic (`libc.so`, `libm.so`, `libdl.so`,
+  Foundation entry** in its `DT_NEEDED`, so no Swift runtime ships in the APK,
+  and everything it does carry is either bionic (`libc.so`, `libm.so`, `libdl.so`,
   `liblog.so`, `libandroid.so`, `libc++_shared.so`) or one of the React Native
   / Nitro shared libraries every nitro module links (`libNitroModules.so`,
   `libfbjni.so`, `libjsi.so`, `libreactnative.so`);
-- the module answers a real JS call correctly — verified by installing the
+- the module answers a real JS call correctly, verified by installing the
   APK on a live emulator and reading the result back from `logcat`.
 
-**Known gap — the same file does not also compile for iOS.** `nitro.json`
+**Known gap. The same file does not also compile for iOS.** `nitro.json`
 declares `ios.language: "swift"`, so nitrogen does generate the iOS sources
 from this spec, but `swift/HybridSimpleMath.swift` is a bare class: it does not
 inherit the generated `HybridSimpleMathSpec`, so nitrogen's iOS autolinking
 (which calls `getCxxWrapper()` on it) would not compile against it. The two
-shapes are mutually exclusive today — iOS needs the class to inherit the
+shapes are mutually exclusive today. iOS needs the class to inherit the
 generated spec from inside `#if canImport(NitroModules)`, and under Embedded
 Swift that guard is false, so the class would vanish and the bridge's
 `HybridSimpleMath_create()` would have nothing left to construct. Nothing is
@@ -149,12 +149,12 @@ Swift-on-iOS reference.
 Stage 1 regenerates three committed trees in `example/math-module` in place:
 `specs/` (the IR), `nitrogen/generated/` (nitrogen's own output), and
 `swiftstitch/generated/` (the alongside pass's Swift bridge, C++ glue header,
-and CMake fragment — deliberately outside nitrogen's tree, which nitrogen
+and CMake fragment, deliberately outside nitrogen's tree, which nitrogen
 sweeps clean of anything it did not itself write). The output is byte-identical,
-so `git status` stays clean after a run — if it does not, the codegen changed
+so `git status` stays clean after a run. If it does not, the codegen changed
 and that diff is the finding.
 
-Deliberately **not** part of `./scripts/ci-local.sh` — it needs Gradle, the
+Deliberately **not** part of `./scripts/ci-local.sh`, because it needs Gradle, the
 Android NDK, and a booted emulator, none of which `ci-local.sh` requires.
 Prerequisites, checked by its own preflight (which fails fast, naming
 whichever is missing):
@@ -170,7 +170,7 @@ whichever is missing):
   Without a JDK 17 already installed, Gradle's toolchain auto-provisioning
   crashes instead of fetching one (the pinned `foojay-resolver-convention`
   0.5.0 is incompatible with newer Gradle). Install one with
-  `mise install java@temurin-17` — **not** `mise use`, which would rewrite
+  `mise install java@temurin-17`, **not** `mise use`, which would rewrite
   this repo's committed `.mise.toml` pin from `temurin-21` to `temurin-17`
   and change the JDK that runs Gradle itself. The parity bar discovers the
   JDK 17 and hands it to Gradle via
@@ -182,7 +182,7 @@ whichever is missing):
 more flag that is recorded only here. `example/rn-app/android/gradle.properties`
 declares `reactNativeArchitectures=armeabi-v7a,arm64-v8a,x86,x86_64`, but the
 CMake fragment SwiftStitch generates for Swift-on-Android recognizes only
-three ABI triples and `message(FATAL_ERROR)`s on any other — `x86` is not
+three ABI triples and `message(FATAL_ERROR)`s on any other, and `x86` is not
 among them. A plain `./gradlew :app:assembleDebug` therefore fails
 configuring `x86` before an arm64 binary is ever produced. Restrict the
 build on the command line instead of editing the committed
@@ -204,7 +204,7 @@ itself, resolving the JDK 17 path in its preflight.
 |---|---|
 | Bun | 1.x |
 | Swift (codegen host) | 5.10+ — `swift-syntax` 510.x. |
-| Swift (codegen host, Phase 2C/2D) | 6.3.1 — `nitrogen-swift-embedded` and `nitrogen-swift-runtime` use 6.3-only features (`@c`, Embedded mode). |
+| Swift (codegen host) | 6.3.1 — `nitrogen-swift-embedded` and `nitrogen-swift-runtime` use 6.3-only features (`@c`, Embedded mode). |
 | Android NDK | r27+ — only if you opt into `android: 'swift'`. |
 
 Per-package toolchain floors are listed in the table at the top.

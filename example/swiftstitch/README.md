@@ -58,5 +58,5 @@ patch and no nitrogen fork.
 
 ## See also
 
-- [`packages/swiftstitch/`](../../packages/swiftstitch/) — the CLI itself.
-- [`../nitrogen-swift-embedded/`](../nitrogen-swift-embedded/) — hosts the alongside-pass driver (`alongside`) this CLI invokes.
+- [`packages/swiftstitch/`](../../packages/swiftstitch/) is the CLI itself.
+- [`../nitrogen-swift-embedded/`](../nitrogen-swift-embedded/) hosts the alongside-pass driver (`alongside`) this CLI invokes.

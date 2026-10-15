@@ -27,13 +27,13 @@ done
 if [[ -n "$swiftc63" ]]; then
   echo "  swift 6.3+ : $swiftc63"
 else
-  echo "  swift 6.3+ : NOT FOUND — nitrogen-swift-embedded compile tests will SKIP"
+  echo "  swift 6.3+ : NOT FOUND, so nitrogen-swift-embedded compile tests will SKIP"
 fi
 
 if compgen -G "$HOME/Library/Android/sdk/ndk/*/toolchains/llvm/prebuilt/*/bin" >/dev/null; then
   echo "  android ndk: $(ls -d "$HOME"/Library/Android/sdk/ndk/* | tail -1)"
 else
-  echo "  android ndk: NOT FOUND — the end-to-end link test will SKIP"
+  echo "  android ndk: NOT FOUND, so the end-to-end link test will SKIP"
 fi
 echo
 

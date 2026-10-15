@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import NitrogenSwiftInputCore
 
-@Suite("Phase 1G.1 — IR JSON codec")
+@Suite("IR JSON codec")
 struct IRJSONCodecTests {
     private let bothSwift: [PlatformBinding] = [
         PlatformBinding(platform: .ios, language: .swift),

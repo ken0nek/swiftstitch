@@ -1,8 +1,8 @@
-# `swiftstitch` — runbook
+# `swiftstitch` runbook
 
 ## What you actually do
 
-In a nitro module — the directory holding `nitro.json` — one command
+In a nitro module, the directory holding `nitro.json`, one command
 replaces the usual `nitrogen-swift-input emit && bunx nitrogen` sequence, and
 chains straight into the Android alongside pass too:
 
@@ -22,7 +22,7 @@ an installed dependency, the same thing is just `swiftstitch build`.)
 Add the [one `include` line](#the-cmake-include-line) to your
 `android/CMakeLists.txt` once, and `./gradlew assembleDebug` compiles your
 Swift into the host `.so`. `NITRO_SWIFTC` only matters for a module with a
-[`swiftstitch` block](#the-swiftstitch-block-in-nitrojson) — an iOS-only
+[`swiftstitch` block](#the-swiftstitch-block-in-nitrojson). An iOS-only
 module never touches it.
 
 **What it does.** `swiftstitch build` runs, in order, from the module
@@ -32,10 +32,10 @@ directory:
 |---|---|---|---|
 | 1 | `input-emit` | `<input-bin> emit` | `swiftstitch.userSwiftDir` exists and contains `Hybrid*.swift` |
 | 2 | `nitrogen` | `bunx nitrogen` | always |
-| 3 | `alongside` | `<embedded-bin> alongside --nitro-json nitro.json` | always — no-ops on its own with no `swiftstitch` block |
+| 3 | `alongside` | `<embedded-bin> alongside --nitro-json nitro.json` | always; no-ops on its own with no `swiftstitch` block |
 
 No `swiftstitch.userSwiftDir` (or no `swiftstitch` block at all) means step 1
-is skipped, not an error — that's the hand-authored-`.nitro.ts` case. It
+is skipped, not an error. That's the hand-authored-`.nitro.ts` case. It
 fails fast on the first non-zero exit and prints that step's stderr. A
 missing `--input-bin`/`--embedded-bin` binary that also isn't on `PATH`
 fails with a message naming it, rather than a bare `ENOENT`.
@@ -46,7 +46,7 @@ fails with a message naming it, rather than a bare `ENOENT`.
 swiftstitch build [--module-dir <dir>] [--input-bin <path>] [--embedded-bin <path>]
 ```
 
-One command — no `doctor`, no subcommand tree. `--module-dir` defaults to
+One command, with no `doctor` and no subcommand tree. `--module-dir` defaults to
 the current directory. `--input-bin`/`--embedded-bin` default to the bare
 names `nitrogen-swift-input`/`nitrogen-swift-embedded`, resolved on `PATH`.
 
@@ -76,7 +76,7 @@ is invisible to it:
 ```
 
 Both keys are required when the block is present, and `android.language`
-must be `"c++"` — that's what nitrogen accepts; `alongside` supplies the
+must be `"c++"`, because that's what nitrogen accepts; `alongside` supplies the
 concrete class underneath it, generated from your Swift. No block at all
 means an iOS-only module: `swiftstitch build` still runs `input-emit` (that
 part is gated on `Hybrid*.swift` existing, not on this block), and
@@ -85,7 +85,7 @@ part is gated on `Hybrid*.swift` existing, not on this block), and
 `swiftstitch build` itself only reads `userSwiftDir` off this block, to
 decide whether to run `input-emit`. `swiftOnAndroid`, `implementationClassName`,
 and the `android.language == "c++"` requirement are read and enforced by
-`alongside`, not by this package — see
+`alongside`, not by this package. See
 [`../nitrogen-swift-embedded/RUNBOOK.md`](../nitrogen-swift-embedded/RUNBOOK.md#the-swiftstitch-block)
 for that validation and the three files it writes.
 
@@ -120,7 +120,7 @@ export NITRO_SWIFTC=~/Library/Developer/Toolchains/swift-6.3.1-RELEASE.xctoolcha
 
 It stays an env var rather than a `nitro.json` value because the toolchain
 path is per-machine. It's only read at Gradle build time, by a module with a
-`swiftstitch` block — `swiftstitch build` itself never touches it.
+`swiftstitch` block. `swiftstitch build` itself never touches it.
 
 ## Writing a spec by hand
 
@@ -128,10 +128,9 @@ There is no `SwiftHybridObject<T>` convenience type in this version.
 Nitrogen resolves the type argument to `HybridObject<...>` syntactically
 (walking the literal object-type syntax with `ts-morph`) rather than through
 the type checker, so a type alias standing in for that argument is invisible
-to it — confirmed by spiking a minimal alias against nitrogen 0.36.1 (and
-again against 0.37.1, with the same result), which
-failed to resolve the language even on a plain indexed access before ever
-reaching a conditional type. **That is a current nitrogen limitation, not a
+to it. A minimal alias spiked against nitrogen 0.36.1 (and again against
+0.37.1, with the same result) failed to resolve the language even on a plain
+indexed access before ever reaching a conditional type. **That is a current nitrogen limitation, not a
 SwiftStitch design choice**; if a future nitrogen resolves aliases, this
 package can add the shorthand back.
 
@@ -160,15 +159,14 @@ cd packages/swiftstitch && bun test   # 3/3 expected
 bunx tsc --noEmit                     # clean
 ```
 
-Only `planSteps` has automated coverage — it's pure, which is the point of
+Only `planSteps` has automated coverage. It's pure, which is the point of
 keeping it separate. `runBuild` and `cli.ts` (subprocess orchestration, PATH
-resolution, file I/O) were exercised by hand against a scratch module for
-this task; they get their first real exercise in CI once Task 4's example
-module runs `swiftstitch build` for real.
+resolution, file I/O) are exercised end to end by `scripts/parity-bar.sh`,
+which runs `swiftstitch build` on `example/math-module`.
 
 ## Known gaps
 
-- **`userSwiftDir` may be any directory** — this used to be a gap and is not
+- **`userSwiftDir` may be any directory.** This used to be a gap and is not
   one any more. `swiftstitch build` decides whether to run `input-emit` by
   globbing `swiftstitch.userSwiftDir`, and `nitrogen-swift-input emit` now
   reads the same key to pick the directory it scans, so the two cannot
@@ -180,8 +178,8 @@ module runs `swiftstitch build` for real.
 
 ## See also
 
-- [`../nitrogen-swift-embedded/RUNBOOK.md`](../nitrogen-swift-embedded/RUNBOOK.md) —
-  the `alongside` pass this CLI's third step drives: the three emitted files,
+- [`../nitrogen-swift-embedded/RUNBOOK.md`](../nitrogen-swift-embedded/RUNBOOK.md)
+  covers the `alongside` pass this CLI's third step drives: the three emitted files,
   the full error table, and the `try!`-error-propagation limitation.
-- [`../nitrogen-swift-input/RUNBOOK.md`](../nitrogen-swift-input/RUNBOOK.md) —
-  the `emit` step's exact CLI semantics.
+- [`../nitrogen-swift-input/RUNBOOK.md`](../nitrogen-swift-input/RUNBOOK.md)
+  covers the `emit` step's exact CLI semantics.

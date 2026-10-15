@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import NitrogenSwiftInputCore
 
-@Suite("Phase 1A.5 — end-to-end: Swift → .nitro.ts → nitrogen")
+@Suite("End-to-end: Swift → .nitro.ts → nitrogen")
 struct EndToEndTests {
     @Test("HybridSimpleMath fixture flows through CLI and nitrogen")
     func endToEnd() throws {
@@ -124,18 +124,15 @@ struct EndToEndTests {
     }
 
     private func resolveWorkspaceRoot() throws -> URL {
-        let bundleURL = Bundle.module.bundleURL
-        var candidate: URL? = bundleURL
-        for _ in 0..<10 {
-            guard let dir = candidate else { break }
+        var dir = Bundle.module.bundleURL.standardizedFileURL
+        while dir.path != "/" {
             let packageJSON = dir.appendingPathComponent("package.json")
             let pkgDir = dir.appendingPathComponent("packages")
             if FileManager.default.fileExists(atPath: packageJSON.path),
                FileManager.default.fileExists(atPath: pkgDir.path) {
                 return dir
             }
-            candidate = dir.deletingLastPathComponent()
-            if candidate == dir { break }
+            dir = dir.deletingLastPathComponent()
         }
         struct WorkspaceRootError: Error, CustomStringConvertible {
             var description: String { "could not resolve workspace root from test bundle" }

@@ -2,7 +2,7 @@ import Foundation
 
 /// JSON-on-disk shape for `HybridObjectIR` and friends. Used as the contract
 /// between this Swift CLI and the downstream `nitrogen-swift-spec-input` TS
-/// adapter (Phase 1G): we emit JSON here, that package reads it and
+/// adapter: we emit JSON here, that package reads it and
 /// constructs nitrogen's internal `HybridObjectSpec` instances directly,
 /// bypassing the `.nitro.ts` artifact entirely.
 public enum IRJSONCodec {

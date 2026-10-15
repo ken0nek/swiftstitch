@@ -76,7 +76,7 @@ public enum CBridgeEmitter {
             .joined(separator: ", ")
         let invocation = "instance.\(method.name)(\(argList))"
 
-        // `try!` keeps the C ABI clean for Phase 2C's primitive subset. A
+        // `try!` keeps the C ABI clean for the primitive subset. A
         // thrown error from a HybridObject method aborts — propagation through
         // the bridge is added in a follow-up commit.
         let call: String

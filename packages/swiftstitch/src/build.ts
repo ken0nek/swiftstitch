@@ -27,8 +27,8 @@ const DEFAULT_EMBEDDED_BIN = 'nitrogen-swift-embedded'
  *
  * The path handed to `alongside` is always absolute. Every step is spawned
  * with `cwd: moduleDir`, so a *relative* `moduleDir` baked into an argument
- * would be applied twice — once by the cwd, once by the child resolving the
- * argument against it — and `alongside` would fail on a doubled path that
+ * would be applied twice, once by the cwd and once by the child resolving the
+ * argument against it, and `alongside` would fail on a doubled path that
  * names a nitro.json nobody wrote. `--out-dir` and `--ir-dir` are left off
  * entirely: `alongside` derives both from nitro.json's own directory.
  */
@@ -36,7 +36,7 @@ export function planSteps(ctx: PlanContext): Step[] {
   const moduleDir = resolve(ctx.moduleDir)
   const steps: Step[] = []
 
-  // Per C6: absence means the author hand-writes their `.nitro.ts` — skip,
+  // Absence means the author hand-writes their `.nitro.ts`. Skip,
   // do not error.
   if (ctx.hasSwiftSources) {
     steps.push({
@@ -46,11 +46,11 @@ export function planSteps(ctx: PlanContext): Step[] {
     })
   }
 
-  // `bunx`, not `bun` — `bun nitrogen` would run a package.json script;
-  // `bunx` runs the installed binary.
+  // `bunx`, not `bun`, because `bun nitrogen` would run a package.json
+  // script and `bunx` runs the installed binary.
   steps.push({ name: 'nitrogen', command: 'bunx', args: ['nitrogen'] })
 
-  // Always runs — it self-no-ops with no `swiftstitch` block in nitro.json,
+  // Always runs. It is a no-op with no `swiftstitch` block in nitro.json,
   // which is exactly the iOS-only author's case.
   steps.push({
     name: 'alongside',
@@ -70,7 +70,7 @@ interface NitroJSONSwiftStitch {
 /**
  * Mirrors `swift/HybridObjectExtractor`'s convention: a flat (non-recursive)
  * `Hybrid*.swift` glob. A missing or unreadable directory is not an error
- * here — it just means there is nothing to emit from, same as
+ * here. It means there is nothing to emit from, same as
  * `nitrogen-swift-input`'s own `discoverDefaultInputs`.
  */
 async function hasHybridSwiftFiles(swiftDir: string): Promise<boolean> {
@@ -88,7 +88,7 @@ async function hasHybridSwiftFiles(swiftDir: string): Promise<boolean> {
 /**
  * Reads `swiftstitch.userSwiftDir` from `<moduleDir>/nitro.json` and checks
  * whether it contains any `Hybrid*.swift` files. No `swiftstitch` block at
- * all (or no nitro.json yet) means `false` — not an error; the `alongside`
+ * all (or no nitro.json yet) means `false`, not an error. The `alongside`
  * step is what raises real misconfiguration, since it always runs and is
  * the authority on the block's shape.
  */
@@ -113,11 +113,11 @@ async function detectSwiftSources(moduleDir: string): Promise<boolean> {
 
 /**
  * Resolves a step's binary to an absolute path, or throws a message naming
- * it. Only `input-emit` and `alongside` go through here — neither
+ * it. Only `input-emit` and `alongside` go through here. Neither
  * `nitrogen-swift-input` nor `nitrogen-swift-embedded` is published for
  * v0.2, so a bare-name miss is expected until a caller passes
  * `--input-bin`/`--embedded-bin` (or builds and installs them on PATH).
- * `bunx` (the `nitrogen` step) is not resolved this way — it ships with bun.
+ * `bunx` (the `nitrogen` step) is not resolved this way, because it ships with bun.
  */
 function resolveBinary(name: string, moduleDir: string): string {
   const resolved = Bun.which(name, { cwd: moduleDir })
@@ -125,7 +125,7 @@ function resolveBinary(name: string, moduleDir: string): string {
     throw new Error(
       `swiftstitch: could not find \`${name}\` on PATH. Neither ` +
         '`nitrogen-swift-input` nor `nitrogen-swift-embedded` is published yet ' +
-        '(v0.2) — build it from source (`swift build -c release` in its ' +
+        '(v0.2). Build it from source (`swift build -c release` in its ' +
         'package) and pass the path via --input-bin/--embedded-bin, or put it ' +
         'on PATH.'
     )
@@ -135,8 +135,8 @@ function resolveBinary(name: string, moduleDir: string): string {
 
 /**
  * Computes `hasSwiftSources`, plans the steps, and runs each in `moduleDir`
- * in order — `input-emit` (if planned) → `nitrogen` → `alongside` — failing
- * fast on the first non-zero exit and printing that command's stderr.
+ * in order: `input-emit` if planned, then `nitrogen`, then `alongside`. It fails
+ * fast on the first non-zero exit and prints that command's stderr.
  */
 export async function runBuild(opts: BuildOptions): Promise<void> {
   // Resolved once, up front: `moduleDir` is used both as the spawn cwd and to

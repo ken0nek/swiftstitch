@@ -50,7 +50,7 @@ the dream path is genuinely interchangeable with the `bun nitrogen` path.
 This example is the smallest demo of that equivalence.
 
 The **alongside-pass driver** that makes Swift × Android work without nitrogen
-schema changes does *not* live here — it ships as the `alongside` subcommand of
+schema changes does *not* live here. It ships as the `alongside` subcommand of
 [`nitrogen-swift-embedded`](../nitrogen-swift-embedded/).
 
 ## See also

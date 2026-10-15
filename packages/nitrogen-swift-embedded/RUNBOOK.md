@@ -13,7 +13,7 @@ nitrogen-swift-embedded alongside --nitro-json nitro.json
 
 Add the [one `include` line](#the-one-line-you-add) to your `android/CMakeLists.txt`,
 export `NITRO_SWIFTC`, and `./gradlew assembleDebug` compiles your Swift into the
-host `.so`. That is the whole story — see [`alongside`](#alongside--the-post-nitrogen-pass).
+host `.so`. That is the whole story. See [`alongside`](#alongside-the-post-nitrogen-pass).
 
 The three lower-level subcommands are what `alongside` (and the CMake fragment it
 writes) run on your behalf. Reach for them directly only for one-off integration
@@ -34,7 +34,7 @@ You then link `out/HybridName.o` into your host `.so` with NDK clang — this CL
 does not do the link. Full worked example under
 [End-to-end (one Hybrid)](#end-to-end-one-hybrid).
 
-**What it does.** Swift CLI that turns IR JSON into the Phase 2C glue files and drives `swiftc` in Embedded mode to produce a no-runtime `.o` for Android. Four subcommands:
+**What it does.** Swift CLI that turns IR JSON into the C-bridge and C++ glue files and drives `swiftc` in Embedded mode to produce a no-runtime `.o` for Android. Four subcommands:
 
 - `emit` — generates `<Class>+CBridge.swift` (Swift `@c` shims).
 - `emit-cpp` — generates `<Class>.hpp` (C++ subclass of `<Class>Spec` that forwards to the `@c` symbols).
@@ -44,7 +44,7 @@ does not do the link. Full worked example under
 **When to use it.** You're shipping Swift on Android without the Swift runtime in `jniLibs/`. `alongside` is the front door and the only subcommand a module author normally runs. The other three are what you use:
 
 - For one-off integration / CI / smoke tests.
-- For projects that haven't adopted the `swiftstitch` block but still want the Phase 2C output shape.
+- For projects that haven't adopted the `swiftstitch` block but still want this output shape.
 - For producing the artifacts the `EndToEndIntegrationTests` exercise.
 
 ## Toolchain
@@ -113,7 +113,7 @@ Runs `swiftc -target <arch>-none-none-elf -enable-experimental-feature Embedded 
 
 The choice of `*-none-none-elf` (bare-metal ELF, no OS) is deliberate — it produces no-runtime object code that the Android NDK can link directly into a host `.so`. The AAPCS/AAPCS64 calling conventions match what Android expects, so the only remaining undefined symbols are bionic primitives (`free`, `memmove`, `posix_memalign`, `__stack_chk_*`, `putchar`).
 
-### `alongside` — the post-nitrogen pass
+### `alongside`, the post-nitrogen pass
 
 ```
 nitrogen-swift-embedded alongside
@@ -123,19 +123,19 @@ nitrogen-swift-embedded alongside
 ```
 
 Both directory flags default to a module-relative convention and are resolved
-against `nitro.json`'s own directory, not your cwd — so the one required flag
+against `nitro.json`'s own directory, not your cwd, so the one required flag
 is enough from anywhere.
 
 Run it **after** `bunx nitrogen`, from anywhere. When a spec declares
 `android: 'c++'`, nitrogen emits the shared C++ layer plus an
 `#include "Hybrid<Foo>.hpp"` in `<Lib>OnLoad.cpp`, then deliberately leaves the
-implementation to you. There is no stub to overwrite — the definition simply
+implementation to you. There is no stub to overwrite, because the definition
 doesn't exist. `alongside` writes exactly that missing piece, so all you author
 is `Hybrid<Foo>.swift`.
 
 The pass only ever **creates** files, at the three paths below, all inside its
 own `swiftstitch/generated/` tree. It neither reads nor writes anything under
-`nitrogen/generated/`, so it cannot corrupt nitrogen's output — and nitrogen's
+`nitrogen/generated/`, so it cannot corrupt nitrogen's output, and nitrogen's
 cleanup, which is scoped to that directory, cannot delete ours. See
 [Your outputs survive a bare `bunx nitrogen`](#your-outputs-survive-a-bare-bunx-nitrogen).
 
@@ -165,7 +165,7 @@ top-level keys at parse, so the block is invisible to it:
 ```
 
 Both keys are required when the block is present. `swiftOnAndroid` holds **spec
-names** (the `autolinking` keys), not class names — the class comes from that
+names** (the `autolinking` keys), not class names. The class comes from that
 spec's `android.implementationClassName`, and the pass never derives one from
 the other. Android language must be `"c++"`: that is what nitrogen accepts, and
 the Swift arrives underneath it.
@@ -182,7 +182,7 @@ swiftstitch/generated/c++/HybridSimpleMath.hpp
 swiftstitch/generated/EmbeddedTest+swift-embedded.cmake
 ```
 
-The tree is flat because all of it is ours and this pass is Android-only —
+The tree is flat because all of it is ours and this pass is Android-only.
 iOS goes through nitrogen's own Swift output, never through here.
 
 `swiftstitch/generated/c++/` is *not* on nitrogen's `include_directories`,
@@ -191,7 +191,7 @@ of its own. That is what makes the `#include "HybridSimpleMath.hpp"` nitrogen
 emits unprompted into `<Lib>OnLoad.cpp` resolve; it comes for free with the
 include you already add.
 
-Re-running is byte-identical — the emitters are deterministic, so there is no
+Re-running is byte-identical. The emitters are deterministic, so there is no
 "already exists" check to defeat.
 
 #### The one line you add
@@ -207,7 +207,7 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/EmbeddedTest+autolinki
 include(${CMAKE_SOURCE_DIR}/../swiftstitch/generated/EmbeddedTest+swift-embedded.cmake)
 ```
 
-Note the second path is **not** under `nitrogen/generated/` — see below for why
+Note the second path is **not** under `nitrogen/generated/`. See below for why
 that matters. Ordering between the two includes is a `target_sources`
 requirement only: `add_library` must have run. The fragment's
 `target_include_directories` is a target property, resolved at generate time,
@@ -220,7 +220,7 @@ append would be discarded.
 #### Your outputs survive a bare `bunx nitrogen`
 
 Nitrogen's CLI deletes every file under **its own output directory** that it did
-not itself generate on that run — it snapshots `nitrogen/generated/` recursively
+not itself generate on that run. It snapshots `nitrogen/generated/` recursively
 beforehand and `fs.rm`s the leftovers, with no allowlist. Anything of ours placed
 in there is erased, whether appended to a nitrogen file or sitting in a separate
 one of its own.
@@ -234,8 +234,8 @@ Verified empirically against nitrogen 0.36.1, and re-verified against 0.37.1
 `node_modules/nitrogen/lib/getFiles.js`) with planted canary files: one nested
 under `nitrogen/generated/` was deleted, one in a sibling directory was not.
 
-Re-running `alongside` after `bunx nitrogen` is still the right habit — the IR
-may have changed — but it is no longer load-bearing for the files' existence.
+Re-running `alongside` after `bunx nitrogen` is still the right habit, because the
+IR may have changed. The files no longer depend on it to exist.
 `swiftstitch build` does both in one invocation.
 
 #### `NITRO_SWIFTC`
@@ -250,7 +250,7 @@ export NITRO_SWIFTC=~/Library/Developer/Toolchains/swift-6.3.1-RELEASE.xctoolcha
 > `swift-embedded: NITRO_SWIFTC must point at a Swift 6.3+ swiftc.`
 
 It stays an env var because the toolchain path is per-machine. `userSwiftDir` is
-by contrast baked into the fragment at generate time — it is a `nitro.json`
+by contrast baked into the fragment at generate time. It is a `nitro.json`
 value, so making the build depend on shell state for it would be gratuitous.
 
 Compilation happens at native-build time rather than in this pass, which buys
@@ -345,8 +345,8 @@ Treat "23/23" as a claim about a machine with both installed.
 - *"swiftc not found at ..."* — `--swiftc` doesn't point at a real binary. Use the absolute path under `~/Library/Developer/Toolchains/...` or wherever swiftly puts it.
 - *"unable to load standard library for target 'aarch64-unknown-linux-android28'"* — you're trying to use the Android SDK target with `-enable-experimental-feature Embedded`. Embedded mode requires a `*-none-none-elf` target instead. The `compile` subcommand uses the right target automatically; check your CLI args if you've overridden `--arch`.
 - *"file not found: <Class>+CBridge.swift"* — `--bridge-dir` doesn't contain a bridge file matching the IR's class names. Run `emit` first.
-- *"Phase 2C swift-embedded does not yet support type `string`"* — the IR uses a type outside Phase 2C's primitive subset. Stick to `Bool`/`Double`/`Int64`/`UInt64`/`Void` for now.
-- *The toolchain-gated tests skip, when the toolchain "is installed"* — the
+- *"Unsupported type `String` in …"* (from `nitrogen-swift-input emit`). The spec uses a type outside the primitive subset. Stick to `Bool`/`Double`/`Int64`/`UInt64`/`Void` for now.
+- *The toolchain-gated tests skip, when the toolchain "is installed".* The
   probe tries exactly two paths, `swift-6.3.1-RELEASE` then
   `swift-6.3.0-RELEASE`, both under `~/Library/Developer/Toolchains/`. It does
   **not** consult `swift-latest.xctoolchain` (that symlink can resolve below
@@ -357,7 +357,7 @@ Treat "23/23" as a claim about a machine with both installed.
 
 ## Limitations (current 2C scope)
 
-- Phase 2C primitive subset only — no `String`, `Array<T>`, `Optional<T>`, `struct`, `enum`, `async`, closures.
+- Primitive subset only — no `String`, `Array<T>`, `Optional<T>`, `struct`, `enum`, `async`, closures.
 - **`try!` error propagation is broken.** `CBridgeEmitter` wraps a throwing
   method's call in `try!`, so a Swift method that throws **traps and kills the
   process** rather than surfacing the error to JS as a rejected promise. The C
@@ -367,8 +367,8 @@ Treat "23/23" as a claim about a machine with both installed.
 - Float widens to `double` in the C++ override (matches nitrogen `NumberType`); the Float→double conversion happens at the `@c` boundary.
 - Targets `aarch64-none-none-elf`, `x86_64-unknown-none-elf`, `armv7-none-none-eabi`. Only `aarch64-none-none-elf` (Android arm64-v8a) is exercised by the test suite, which takes it through the Embedded Swift compile, an NDK link, and the `DT_NEEDED` / exported-symbol assertions. The other two triples are emitted by `CMakeFragmentEmitter` but have no test.
 - **Nothing in this project has run on a device or emulator yet.** The
-  no-Swift-runtime claim rests on object- and link-level evidence — see
-  `EndToEndIntegrationTests` — not on a shipped, launched app.
+  no-Swift-runtime claim rests on object- and link-level evidence in
+  `EndToEndIntegrationTests`, not on a shipped, launched app.
   `scripts/parity-bar.sh` is the gate that would close that gap; it has never
   run past its JDK 17 preflight.
 
@@ -378,5 +378,5 @@ Treat "23/23" as a claim about a machine with both installed.
   the front end that produces the IR JSON this package consumes.
 - `Tests/NitrogenSwiftEmbeddedCoreTests/EndToEndIntegrationTests.swift` — the
   strongest reproducer of the no-Swift-runtime assertion.
-- [`alongside`](#alongside--the-post-nitrogen-pass) — the pass that drives this
+- [`alongside`](#alongside-the-post-nitrogen-pass) is the pass that drives this
   pipeline off `nitro.json` instead of hand-run subcommands.

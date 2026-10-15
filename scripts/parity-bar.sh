@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The parity bar: drives the full SwiftStitch pipeline into a debug APK on a
-# live arm64-v8a emulator and proves the two things ci-local.sh cannot —
-# the shipped .so pulls in no Swift runtime (see ALLOWED_NEEDED below), and
-# the module answers a real JS call correctly. Needs Gradle, the Android
+# live arm64-v8a emulator and proves two things ci-local.sh cannot. The
+# shipped .so pulls in no Swift runtime (see ALLOWED_NEEDED below), and the
+# module answers a real JS call correctly. Needs Gradle, the Android
 # NDK, and a booted AVD, so it is deliberately NOT part of ci-local.sh, which
 # stays fast and toolchain-independent. Exit 0 iff every stage below passes.
 set -uo pipefail
@@ -17,11 +17,11 @@ WORK="$(mktemp -d)" || fail "mktemp -d failed"
 trap 'rm -rf "$WORK"' EXIT
 
 # Captured before Preflight below overwrites the script's own JAVA_HOME (to
-# the JDK 21 that runs Gradle) — find_jdk17_home checks whether the
+# the JDK 21 that runs Gradle), because find_jdk17_home checks whether the
 # invoking shell's original JAVA_HOME already happens to be a JDK 17.
 AMBIENT_JAVA_HOME="${JAVA_HOME:-}"
 
-# --- Paths — nothing below this block is ambient ---------------------------
+# --- Paths. Nothing below this block is ambient ----------------------------
 
 SWIFTC="$HOME/Library/Developer/Toolchains/swift-6.3.1-RELEASE.xctoolchain/usr/bin/swiftc"
 NDK_READELF="$(ls "$HOME"/Library/Android/sdk/ndk/*/toolchains/llvm/prebuilt/*/bin/llvm-readelf 2>/dev/null | tail -1)"
@@ -43,34 +43,34 @@ EXPECTED_LINE="$LOG_TAG: sum=5 product=20"
 # Every DT_NEEDED entry the shipped libNitroMath.so is permitted to carry, in
 # two tiers:
 #
-#   1. bionic / NDK system libraries — the freestanding floor. A standalone
+#   1. bionic / NDK system libraries, the freestanding floor. A standalone
 #      Embedded-Swift .so needs nothing else, which is what
 #      Tests/.../EndToEndIntegrationTests.swift links and asserts on.
 #   2. the React Native + Nitro shared libraries that EVERY nitro module
 #      links. libNitroMath.so is a real nitro module, not a freestanding .so:
 #      NitroMath+autolinking.cmake target_link_libraries() it against
 #      fbjni::fbjni, ReactAndroid::jsi, react-native-nitro-modules::NitroModules
-#      and (RN >= 0.76, and this repo is on 0.85.2) ReactAndroid::reactnative —
-#      all prefab SHARED libraries whose symbols are referenced out-of-line, so
-#      --as-needed cannot elide them. None of them is Swift; their presence is
-#      expected and says nothing about the runtime claim.
+#      and (RN >= 0.76, and this repo is on 0.85.2) ReactAndroid::reactnative.
+#      All are prefab SHARED libraries whose symbols are referenced
+#      out-of-line, so --as-needed cannot elide them. None of them is Swift;
+#      their presence is expected and says nothing about the runtime claim.
 #
 # Tier 2 was derived from that CMake, not read off a built APK, so treat it as
 # a PREDICTION. An entry outside this list is much more likely to be another
-# legitimate RN library than a defect — the failure message below says so.
+# legitimate RN library than a defect, and the failure message below says so.
 ALLOWED_NEEDED=(
-  # tier 1 — bionic / NDK
+  # tier 1: bionic / NDK
   libc.so libm.so libdl.so liblog.so libandroid.so libc++_shared.so
-  # tier 2 — React Native + Nitro
+  # tier 2: React Native + Nitro
   libNitroModules.so libfbjni.so libjsi.so libreactnative.so
 )
 
-# --- Preflight — fail early, naming what is missing -------------------------
+# --- Preflight. Fail early, naming what is missing --------------------------
 #
-# Inlined from the plan's Preconditions section. Mandatory for the reasons in
-# Task 4 Step 8: the ambient JAVA_HOME is stale (points at an uninstalled
-# openjdk@17 cellar path), and a full-ABI Gradle build hits the generated
-# CMake fragment's FATAL_ERROR on x86 (see GRADLE_ARCH_FLAG below).
+# These checks are mandatory because an ambient JAVA_HOME can be stale
+# (pointing at an uninstalled openjdk@17 cellar path), and a full-ABI Gradle
+# build hits the generated CMake fragment's FATAL_ERROR on x86 (see
+# GRADLE_ARCH_FLAG below).
 resolve_java_home() {
   local h
   h="$(mise where java 2>/dev/null)" && [ -x "$h/bin/java" ] && { echo "$h"; return 0; }
@@ -89,8 +89,8 @@ resolve_java_home() {
 # downloading one. This check turns that crash into a one-line, actionable
 # preflight message; it does not provision anything.
 #
-# Multiple probes because "install a JDK 17" is genuinely ambiguous — verified
-# live on this machine: `mise where java@temurin-17` (vendor-qualified, what
+# Multiple probes because "install a JDK 17" is ambiguous, as verified live
+# on this machine. `mise where java@temurin-17` (vendor-qualified, what
 # our own remediation message suggests) correctly resolves once installed
 # (proven by the analogous `mise where java@temurin-21` against the JDK 21
 # already here), but the shorter, equally natural `mise use java@17` installs
@@ -124,19 +124,19 @@ find_jdk17_home() {
 
 echo "== preflight =="
 
-[[ -x "$SWIFTC" ]] || fail "swiftc not found at $SWIFTC — install the Swift 6.3.1 toolchain"
+[[ -x "$SWIFTC" ]] || fail "swiftc not found at $SWIFTC. Install the Swift 6.3.1 toolchain"
 echo "  swiftc      : $SWIFTC"
 
-[[ -n "$NDK_READELF" && -x "$NDK_READELF" ]] || fail "llvm-readelf not found under ~/Library/Android/sdk/ndk/*/ — install Android NDK r27+"
+[[ -n "$NDK_READELF" && -x "$NDK_READELF" ]] || fail "llvm-readelf not found under ~/Library/Android/sdk/ndk/*/. Install Android NDK r27+"
 echo "  ndk readelf : $NDK_READELF"
 
-command -v adb >/dev/null 2>&1 || fail "adb not found on PATH — install Android platform-tools"
+command -v adb >/dev/null 2>&1 || fail "adb not found on PATH. Install Android platform-tools"
 echo "  adb         : $(command -v adb)"
 
 command -v unzip >/dev/null 2>&1 || fail "unzip not found on PATH"
 echo "  unzip       : $(command -v unzip)"
 
-JAVA_HOME="$(resolve_java_home)" || fail "no JDK 21 — see plan Preconditions (pin one with 'mise use java@temurin-21', or install Android Studio)"
+JAVA_HOME="$(resolve_java_home)" || fail "no JDK 21. Pin one with 'mise use java@temurin-21', or install Android Studio"
 export JAVA_HOME
 "$JAVA_HOME/bin/java" -version >/dev/null 2>&1 || fail "\"$JAVA_HOME/bin/java\" -version failed"
 echo "  java 21     : $JAVA_HOME"
@@ -144,16 +144,16 @@ echo "  java 21     : $JAVA_HOME"
 if jdk17_home="$(find_jdk17_home)"; then
   echo "  java 17     : $jdk17_home"
 else
-  fail "no JDK 17 found — React Native's Gradle plugin requires a JDK 17 toolchain (separate from the JDK 21 that runs Gradle itself) to compile its own included build; without one, Gradle's toolchain auto-provisioning crashes instead of fetching it. Install one with \`mise install java@temurin-17\` — NOT \`mise use\`, which would rewrite this repo's committed .mise.toml pin from temurin-21 to temurin-17 and change the JDK that runs Gradle. Then re-run."
+  fail "no JDK 17 found. React Native's Gradle plugin requires a JDK 17 toolchain (separate from the JDK 21 that runs Gradle itself) to compile its own included build; without one, Gradle's toolchain auto-provisioning crashes instead of fetching it. Install one with \`mise install java@temurin-17\`, NOT \`mise use\`, which would rewrite this repo's committed .mise.toml pin from temurin-21 to temurin-17 and change the JDK that runs Gradle. Then re-run."
 fi
 
-[[ -x "$EMULATOR" ]] || fail "emulator binary not found at $EMULATOR — install the Android Emulator SDK component"
+[[ -x "$EMULATOR" ]] || fail "emulator binary not found at $EMULATOR. Install the Android Emulator SDK component"
 echo "  emulator    : $EMULATOR"
 
 # Check the AVD's actual ABI by reading its config rather than trusting the
-# name — an x86_64 "Medium_Phone"-alike would otherwise pass silently.
-# An AVD's *name* is its .ini filename, NOT its .avd directory name — the two
-# routinely differ (Android Studio's "Medium_Phone_API_36.1" ships a
+# name. An x86_64 "Medium_Phone"-alike would otherwise pass silently.
+# An AVD's *name* is its .ini filename, NOT its .avd directory name, and the
+# two routinely differ (Android Studio's "Medium_Phone_API_36.1" ships a
 # Medium_Phone.avd data dir). Deriving the name from the directory yields a name
 # `emulator -avd` rejects with "Unknown AVD name", after the build has already
 # run. So enumerate names the emulator itself admits, then follow each one's
@@ -172,16 +172,16 @@ while IFS= read -r candidate; do
     break
   fi
 done < <("$EMULATOR" -list-avds 2>/dev/null)
-[[ -n "$AVD_NAME" ]] || fail "no arm64-v8a AVD found — 'emulator -list-avds' lists no AVD whose config.ini has abi.type=arm64-v8a. Create one in Android Studio's Device Manager."
+[[ -n "$AVD_NAME" ]] || fail "no arm64-v8a AVD found. 'emulator -list-avds' lists no AVD whose config.ini has abi.type=arm64-v8a. Create one in Android Studio's Device Manager."
 echo "  avd         : $AVD_NAME ($AVD_CONFIG)"
 
 GRADLE_ARCH_FLAG="-PreactNativeArchitectures=arm64-v8a"
 
 # NITRO_SWIFTC must stay exported through both Stage 1 (swiftstitch build,
 # which does not itself compile Swift but must succeed before Gradle runs)
-# and Stage 2 (the Gradle/CMake build, which is where swiftc actually runs —
-# the generated NitroMath+swift-embedded.cmake fragment FATAL_ERRORs at
-# configure time if ENV{NITRO_SWIFTC} is unset).
+# and Stage 2 (the Gradle/CMake build, which is where swiftc runs). The
+# generated NitroMath+swift-embedded.cmake fragment FATAL_ERRORs at configure
+# time if ENV{NITRO_SWIFTC} is unset.
 export NITRO_SWIFTC="$SWIFTC"
 
 # --- Stage 1: swiftstitch build (example/math-module) ----------------------
@@ -198,12 +198,13 @@ done
 
 # NEVER substitute this with a bare `bunx nitrogen`. That is only nitrogen's
 # half of the pipeline: it neither re-derives the IR from the Swift source
-# (nitrogen-swift-input emit) nor writes the three alongside outputs — the
+# (nitrogen-swift-input emit) nor writes the three alongside outputs: the
 # CMake fragment, the C++ glue header, the CBridge Swift file. `swiftstitch
 # build` runs all three steps in one invocation. Those three files do now
-# survive a bare `bunx nitrogen` — they live in swiftstitch/generated/, and
-# nitrogen's cleanup sweep is scoped to nitrogen/generated/ — but they would
-# be stale against a changed Swift source, which is what this bar measures.
+# survive a bare `bunx nitrogen`, because they live in swiftstitch/generated/
+# and nitrogen's cleanup sweep is scoped to nitrogen/generated/. But they
+# would be stale against a changed Swift source, which is what this bar
+# measures.
 bun "$CLI" build \
   --module-dir "$MODULE_DIR" \
   --input-bin "$INPUT_BIN" \
@@ -212,15 +213,15 @@ bun "$CLI" build \
 
 # Refresh rn-app's link tree before Gradle reads it. `bun install` materializes
 # a `file:` dependency as a directory of per-file symlinks, NOT as one symlink
-# to the module — so anything the module gained since the last install is
-# simply absent from node_modules/react-native-swiftstitch-math/.
+# to the module. So anything the module gained since the last install is
+# absent from node_modules/react-native-swiftstitch-math/.
 #
 # This bites hard because AGP configures the module's CMake with
 # CMAKE_SOURCE_DIR pointing at the *node_modules* copy, so the fragment's
 # `${CMAKE_SOURCE_DIR}/../swiftstitch/generated/...` is resolved there. A
 # missing link surfaces as "include could not find requested file" naming a
-# path under node_modules, while the file plainly exists in the source module —
-# a genuinely confusing half-hour. Observed for real when swiftstitch/ was
+# path under node_modules, while the file exists in the source module. That
+# cost a confusing half-hour. Observed for real when swiftstitch/ was
 # first created after an install.
 echo "  refreshing example/rn-app link tree (bun install)"
 (cd "$REPO_ROOT/example/rn-app" && bun install) >/dev/null \
@@ -237,7 +238,7 @@ echo "== stage 2: gradlew :app:assembleDebug ($GRADLE_ARCH_FLAG) =="
 # produced.
 #
 # -Porg.gradle.java.installations.paths registers $jdk17_home as a toolchain
-# Gradle can discover without auto-provisioning — otherwise the preflight
+# Gradle can discover without auto-provisioning. Otherwise the preflight
 # check above finds a JDK 17 in a location (e.g. a mise install) Gradle's own
 # toolchain detection does not scan, and the crash this whole check exists to
 # avoid happens anyway. This mechanism is UNVERIFIED end to end: no JDK 17
@@ -258,17 +259,17 @@ NEEDED="$("$NDK_READELF" -d "$SO" | grep NEEDED)"
 echo "$NEEDED"
 
 # Guard against a vacuous pass: a stripped or wrong file is not a success.
-[[ -n "$NEEDED" ]] || fail "no DT_NEEDED entries found in $SO — stripped or wrong file"
+[[ -n "$NEEDED" ]] || fail "no DT_NEEDED entries found in $SO. Stripped or wrong file?"
 
 # Two assertions per entry, in this order, because they carry very different
 # verdicts and must not be confused for one another:
 #
-#   1. a swift/foundation match is a PRODUCT defect — the headline claim is
+#   1. a swift/foundation match is a PRODUCT defect. The headline claim is
 #      violated. Asserted directly rather than by implication, so the claim
 #      does not rest on ALLOWED_NEEDED being complete.
-#   2. anything else outside ALLOWED_NEEDED is most likely a SCRIPT defect —
-#      tier 2 of that list is a prediction. Still fails: an unknown dependency
-#      must stop the bar rather than be waved through.
+#   2. anything else outside ALLOWED_NEEDED is most likely a SCRIPT defect,
+#      because tier 2 of that list is a prediction. Still fails: an unknown
+#      dependency must stop the bar rather than be waved through.
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   lib="$(sed -n 's/.*\[\(.*\)\].*/\1/p' <<<"$line")"
@@ -276,9 +277,9 @@ while IFS= read -r line; do
 
   case "$(tr '[:upper:]' '[:lower:]' <<<"$lib")" in
     # Swift corelibs whose names contain neither "swift" nor "foundation" are
-    # named explicitly — they are just as much a runtime leak.
+    # named explicitly, because they are just as much a runtime leak.
     *swift*|*foundation*|libdispatch.so|libblocksruntime.so|*icu*swift*)
-      fail "SWIFT RUNTIME IN THE APK: '$lib' is a DT_NEEDED entry of $SO. Embedded Swift exists precisely so nothing like this ships. Do NOT add it to ALLOWED_NEEDED — find out why it linked."
+      fail "SWIFT RUNTIME IN THE APK: '$lib' is a DT_NEEDED entry of $SO. Embedded Swift exists precisely so nothing like this ships. Do NOT add it to ALLOWED_NEEDED. Find out why it linked."
       ;;
   esac
 
@@ -289,7 +290,7 @@ while IFS= read -r line; do
       break
     fi
   done
-  (( allowed == 1 )) || fail "DT_NEEDED entry '$lib' is not in ALLOWED_NEEDED (${ALLOWED_NEEDED[*]}). This is probably not a product defect: the React Native / Nitro half of that list was derived from NitroMath+autolinking.cmake rather than read off a built APK, so a legitimate RN library may simply be missing from it. Confirm '$lib' is expected for this module, then add it. (A Swift runtime entry is caught by the check above, not here.)"
+  (( allowed == 1 )) || fail "DT_NEEDED entry '$lib' is not in ALLOWED_NEEDED (${ALLOWED_NEEDED[*]}). This is probably not a product defect: the React Native / Nitro half of that list was derived from NitroMath+autolinking.cmake rather than read off a built APK, so a legitimate RN library may be missing from it. Confirm '$lib' is expected for this module, then add it. (A Swift runtime entry is caught by the check above, not here.)"
 done <<<"$NEEDED"
 
 echo "  no Swift/Foundation runtime in DT_NEEDED; every entry is bionic or RN/Nitro"
@@ -312,10 +313,10 @@ device_lines() { adb devices | tail -n +2 | sed '/^[[:space:]]*$/d'; }
 
 device_count="$(device_lines | wc -l | tr -d ' ')"
 if (( device_count == 0 )); then
-  echo "  no device online — booting $AVD_NAME"
+  echo "  no device online, booting $AVD_NAME"
   nohup "$EMULATOR" -avd "$AVD_NAME" -no-snapshot -no-boot-anim >"$WORK/emulator.log" 2>&1 &
 elif (( device_count > 1 )); then
-  fail "more than one adb device/emulator attached ($device_count) — the parity bar needs exactly one so its serial-less adb commands are unambiguous: $(device_lines | tr '\n' ';')"
+  fail "more than one adb device/emulator attached ($device_count). The parity bar needs exactly one so its serial-less adb commands are unambiguous: $(device_lines | tr '\n' ';')"
 fi
 
 echo "  waiting for sys.boot_completed..."
@@ -334,7 +335,7 @@ done
 echo "  device booted"
 
 # Re-check post-boot: exactly one device, and it must actually be the
-# arm64-v8a AVD — an attached phone or an x86_64 emulator would otherwise
+# arm64-v8a AVD. An attached phone or an x86_64 emulator would otherwise
 # silently receive the arm64-only APK and die with UnsatisfiedLinkError,
 # which without this check surfaces only later as a misleading "logcat never
 # showed" verdict.
@@ -347,14 +348,14 @@ DEVICE_ABI="$(adb shell getprop ro.product.cpu.abi 2>/dev/null | tr -d '\r\n')"
 # Unguarded, this is a false-PASS vector: if `logcat -c` silently fails (it
 # does on some images) while a previous run's EXPECTED_LINE is still in the
 # ring buffer, the poll below would match a stale line and report PASS
-# without this build ever emitting it — the one check whose entire job is
+# without this build ever emitting it. The one check whose entire job is
 # falsifiability must not itself fail silently.
 adb logcat -c || fail "adb logcat -c failed"
 adb install -r "$APK" || fail "adb install failed"
 # Not redirected: on failure to launch, monkey's diagnostic ("No activities
 # found to run, monkey aborted.") goes to stdout, and monkey's exit code is
-# not reliably non-zero on that failure — leaving stdout visible is often
-# the only signal.
+# not reliably non-zero on that failure. Visible stdout is often the only
+# signal.
 adb shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1 || fail "failed to launch $APP_ID"
 
 # Poll up to ~30s for the line to appear. Matching the full EXPECTED_LINE

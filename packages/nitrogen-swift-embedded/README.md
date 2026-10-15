@@ -20,12 +20,12 @@ Two things this package deliberately does **not** do:
 
 - **It does not link.** `compile` stops at the `.o`; you link it into your
   host `.so` with NDK clang.
-- **It does generate the Android CMake fragment** — see `CMakeFragmentEmitter`
+- **It does generate the Android CMake fragment.** See `CMakeFragmentEmitter`
   and the `alongside` subcommand below.
 
 The `alongside` subcommand is the driver: run after `bunx nitrogen`, it writes
 the `@c` bridge, the C++ glue header, and the CMake fragment into
-`swiftstitch/generated/` — its own tree, sitting alongside `nitrogen/generated/`
+`swiftstitch/generated/`, its own tree, sitting alongside `nitrogen/generated/`
 rather than inside it, so nitrogen's cleanup never reaches them.
 `swiftstitch build` chains the whole pipeline for you; you can also invoke this
 CLI directly from your own build script.
@@ -39,7 +39,7 @@ CLI directly from your own build script.
 | Link the `.o` | Android **NDK r27+** (not invoked by this CLI) |
 
 Point `--swiftc` at an explicit 6.3.x toolchain. The test helpers probe exactly
-two paths — `swift-6.3.1-RELEASE` then `swift-6.3.0-RELEASE`, under
+two paths, `swift-6.3.1-RELEASE` then `swift-6.3.0-RELEASE`, under
 `~/Library/Developer/Toolchains/`. `swift-latest.xctoolchain` is deliberately
 not among them: it can resolve below 6.3 and would make the probe claim a
 toolchain it does not have.
@@ -101,7 +101,7 @@ it needs an out-param error channel and is a tracked follow-up.
 ## Architectures
 
 `aarch64-none-none-elf`, `x86_64-unknown-none-elf`, `armv7-none-none-eabi`.
-Only `aarch64` (Android `arm64-v8a`) is covered by a test — compile, NDK link,
+Only `aarch64` (Android `arm64-v8a`) is covered by a test, with compile, NDK link,
 and `DT_NEEDED` assertions. The other two are emitted but unexercised, and
 nothing here has yet run on a device or emulator; multi-ABI is out of scope for
 now.
@@ -116,7 +116,7 @@ swift test --package-path packages/nitrogen-swift-embedded
 6.3 `swiftc`; one runs the full pipeline through an NDK link and asserts
 `DT_NEEDED` is bionic-only with the `@c` symbols exported.
 
-**Those three skip — they do not fail — without a toolchain.** Their
+**Those three skip, not fail, without a toolchain.** Their
 conditions live in `.enabled(if:)` traits, so swift-testing reports them as
 skipped rather than recording a failure. Read "23/23" as a claim about a
 machine with Swift 6.3+ and NDK r27+ installed; on a bare machine expect the
@@ -125,7 +125,7 @@ same run to pass with three skipped. Suite-by-suite map:
 
 ## Status
 
-Shipped — the second SwiftStitch package in this repo, and the host of the
-Swift × Android alongside-pass (`alongside`). The one-command wrapper around
+Shipped. It is the second SwiftStitch package in this repo and the host of
+the Swift × Android alongside-pass (`alongside`). The one-command wrapper around
 it is the `swiftstitch` package. `nitrogen-swift-spec-input` is untouched v0.3
 work and hosts nothing in this pipeline. See the root README's package table.

@@ -3,7 +3,7 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
 // Both example modules are installed via `file:../<name>`, so their sources
 // live outside the rn-app project root. Metro only resolves what it watches,
-// so every such module must be listed here — a module wired into package.json
+// so every such module must be listed here. A module wired into package.json
 // but missing from this list fails to bundle with "could not be found within
 // the project", even though node_modules/<name> exists and its symlinks are
 // intact.
@@ -24,7 +24,7 @@ const config = {
     unstable_enableSymlinks: true,
     // The modules' source files import `react-native-nitro-modules`
     // (a peerDep). With symlinks on, Metro resolves relative to the real
-    // path under each module dir, which has no node_modules — so point it
+    // path under each module dir, which has no node_modules, so point it
     // back at the rn-app's installation here.
     nodeModulesPaths: [path.resolve(__dirname, 'node_modules')],
   },

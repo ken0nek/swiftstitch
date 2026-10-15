@@ -33,7 +33,7 @@ async function main(argv: string[]): Promise<void> {
     }
   }
 
-  // `hasSwiftSources` is ignored — `runBuild` recomputes it from
+  // `hasSwiftSources` is ignored. `runBuild` recomputes it from
   // `moduleDir`'s nitro.json. It's only present here to satisfy
   // `BuildOptions`, which is `PlanContext` verbatim.
   await runBuild({ hasSwiftSources: false, moduleDir, inputBin, embeddedBin })

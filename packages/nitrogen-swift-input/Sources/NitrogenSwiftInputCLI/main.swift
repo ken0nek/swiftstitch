@@ -19,7 +19,7 @@ import NitrogenSwiftInputCore
 // then chains into a first `emit` so the user sees the full output tree
 // on the very first invocation.
 //
-// JSON output is the contract for Phase 1G — the TS spec adapter
+// JSON output is the contract for the TS spec adapter
 // (`nitrogen-swift-spec-input`) consumes it and constructs nitrogen's
 // internal `HybridObjectSpec` instances directly, no `.nitro.ts` artifact.
 

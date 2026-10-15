@@ -38,11 +38,11 @@ struct AlongsideTests {
         #expect(cmake.contains(#"set(_NITRO_USER_SWIFT_DIR "${CMAKE_SOURCE_DIR}/../swift")"#))
         #expect(cmake.contains(#"$ENV{NITRO_SWIFTC}"#))
         // userSwiftDir is baked in at generate time; only NITRO_SWIFTC is an
-        // env var. Assert on `ENV{...}` specifically — the local CMake
+        // env var. Assert on `ENV{...}` specifically, because the local CMake
         // variable `${_NITRO_USER_SWIFT_DIR}` legitimately appears.
         #expect(!cmake.contains(#"ENV{NITRO_USER_SWIFT_DIR}"#))
         #expect(cmake.contains("target_sources(EmbeddedTest PRIVATE"))
-        // Load-bearing: the glue headers no longer sit on nitrogen's include
+        // Required: the glue headers no longer sit on nitrogen's include
         // path, so without this line nitrogen's own <Lib>OnLoad.cpp cannot
         // resolve `#include "Hybrid<Foo>.hpp"`.
         #expect(cmake.contains(

@@ -1,12 +1,12 @@
 /**
- * SwiftStitch RN example — exercises two HybridObjects, each defined by a
+ * SwiftStitch RN example. It exercises two HybridObjects, each defined by a
  * single Swift file and wired through nitrogen:
  *
- * - `Counter` (counter-module) — Swift on iOS, Kotlin on Android.
- * - `SimpleMath` (math-module) — the same Swift file on both, compiled to
- *   Embedded Swift for Android. It is exercised from `index.js`, not from
- *   here, so that a counter-module failure in this component cannot stop the
- *   parity bar's logcat line from being emitted.
+ * - `Counter` (counter-module) is Swift on iOS, Kotlin on Android.
+ * - `SimpleMath` (math-module) is Swift on Android, compiled to Embedded
+ *   Swift. The same file does not yet compile for iOS. It is exercised from
+ *   `index.js`, not from here, so that a counter-module failure in this
+ *   component cannot stop the parity bar's logcat line from being emitted.
  */
 
 import { useMemo, useState } from 'react';

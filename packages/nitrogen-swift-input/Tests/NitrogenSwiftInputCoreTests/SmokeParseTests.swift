@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import NitrogenSwiftInputCore
 
-@Suite("Phase 1A.1 — swift-syntax smoke parse")
+@Suite("swift-syntax smoke parse")
 struct SmokeParseTests {
     @Test("Parser accepts a valid Swift declaration")
     func validSourceHasNoErrors() throws {

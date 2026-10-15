@@ -6,12 +6,12 @@ import NitrogenSwiftInputCore
 /// When a spec declares `android: 'c++'`, nitrogen emits the shared C++ layer
 /// and an `#include "Hybrid<Foo>.hpp"` in `<Lib>OnLoad.cpp`, then deliberately
 /// leaves the implementation to the author. This pass writes exactly that
-/// missing piece — the Swift `@c` bridge, the C++ glue header, and the CMake
-/// recipe that compiles the Swift — so the author writes only
+/// missing piece, which is the Swift `@c` bridge, the C++ glue header, and the
+/// CMake recipe that compiles the Swift. The author writes only
 /// `Hybrid<Foo>.swift`.
 ///
 /// It **only ever creates** files, at the three contracted paths under
-/// `outDir` — `<moduleDir>/swiftstitch/generated/`, our own tree. It never
+/// `outDir`, which is `<moduleDir>/swiftstitch/generated/`, our own tree. It never
 /// reads or writes anything under `nitrogen/generated/`, which is what keeps
 /// the output alive: nitrogen's cleanup snapshots *its* output directory
 /// recursively and deletes every file it did not itself generate, so anything
@@ -19,12 +19,12 @@ import NitrogenSwiftInputCore
 public enum AlongsideRunner {
     /// Emits the three files for every spec listed in `swiftstitch.swiftOnAndroid`
     /// and returns the paths written, in emission order. Empty means the module
-    /// has no `swiftstitch` block — a no-op, not an error.
+    /// has no `swiftstitch` block. That is a no-op, not an error.
     ///
     /// - Parameters:
     ///   - nitroJSONPath: the module's `nitro.json`; `userSwiftDir` resolves
     ///     against its directory.
-    ///   - outDir: where the three files go — `<moduleDir>/swiftstitch/generated`
+    ///   - outDir: where the three files go. It is `<moduleDir>/swiftstitch/generated`
     ///     by convention, which is what the CLI defaults to.
     ///   - irDir: where `<specName>.ir.json` files live.
     @discardableResult
@@ -39,7 +39,7 @@ public enum AlongsideRunner {
         let userSwiftDir = URL(fileURLWithPath: config.userSwiftDir, relativeTo: moduleDir)
         let irDirURL = URL(fileURLWithPath: irDir, isDirectory: true)
         let outDirURL = URL(fileURLWithPath: outDir, isDirectory: true)
-        // Flat — no `android/` level — because the whole tree is ours and this
+        // Flat, with no `android/` level, because the whole tree is ours and this
         // pass is Android-only: iOS goes through nitrogen's own Swift output,
         // never through here.
         let bridgeDir = outDirURL.appendingPathComponent("swift", isDirectory: true)
@@ -88,8 +88,8 @@ public enum AlongsideRunner {
     }
 
     /// `<irDir>/<specName>.ir.json`, narrowed to the one object the entry names.
-    /// The IR is keyed by spec name but the class name is authoritative — a file
-    /// may carry several HybridObjects.
+    /// The IR is keyed by spec name but the class name is authoritative, because
+    /// a file may carry several HybridObjects.
     private static func loadIR(spec entry: AlongsideConfig.Entry, in irDir: URL) throws -> HybridObjectIR {
         let irPath = irDir.appendingPathComponent("\(entry.specName).ir.json")
         guard FileManager.default.fileExists(atPath: irPath.path) else {

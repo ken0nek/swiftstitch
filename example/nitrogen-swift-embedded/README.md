@@ -39,7 +39,7 @@ libMyApp.so   ← contains Embedded Swift code, links bionic + libc++_shared onl
 
 The CMake fragment that compiles and links the Embedded `.o` comes from this
 same package's `alongside` subcommand, which writes the bridge, the C++ glue,
-and the fragment to `swiftstitch/generated/` — see
+and the fragment to `swiftstitch/generated/`. See
 [`example/math-module/`](../math-module/) for a module wired end to end.
 
 | | |

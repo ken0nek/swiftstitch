@@ -12,15 +12,15 @@ test('runs all three when Swift sources are present', () => {
   expect(steps.map(s => s.name)).toEqual(['input-emit', 'nitrogen', 'alongside'])
 })
 
-test('alongside always runs — it self-no-ops without a swiftstitch block', () => {
+test('alongside always runs, and is a no-op without a swiftstitch block', () => {
   for (const hasSwiftSources of [true, false]) {
     expect(planSteps({ hasSwiftSources, moduleDir: '/m' }).some(s => s.name === 'alongside')).toBe(true)
   }
 })
 
-// Regression: a relative moduleDir used to be applied twice — once as the
-// spawn cwd, once by `alongside` resolving the relative argument against that
-// cwd — so `alongside` failed on a doubled path naming no real nitro.json.
+// Regression: a relative moduleDir used to be applied twice, once as the
+// spawn cwd and once by `alongside` resolving the relative argument against
+// that cwd, so `alongside` failed on a doubled path naming no real nitro.json.
 test('alongside paths are absolute even when moduleDir is relative', () => {
   const steps = planSteps({ hasSwiftSources: true, moduleDir: 'example/math-module' })
   const alongside = steps.find(s => s.name === 'alongside')!

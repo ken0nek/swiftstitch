@@ -5,7 +5,7 @@ import Testing
 /// `emit`'s default input discovery must honor `swiftstitch.userSwiftDir`.
 ///
 /// Before this, the scan directory was a hardcoded `swift/` and nitro.json was
-/// loaded only *after* inputs were resolved — so a module could declare
+/// loaded only *after* inputs were resolved. So a module could declare
 /// `userSwiftDir` and have `emit` ignore it, failing with "no Hybrid*.swift
 /// files in swift/" while the sources sat where the config said they were.
 @Suite("emit honors swiftstitch.userSwiftDir")
@@ -98,7 +98,7 @@ struct UserSwiftDirTests {
     @Test("the error names the configured directory, not the hardcoded default")
     func errorNamesConfiguredDir() throws {
         let bin = try cliBinary()
-        // Config says `sources`, but the Swift is in `swift/` — so discovery
+        // Config says `sources`, but the Swift is in `swift/`, so discovery
         // must come up empty and say so about `sources`.
         let root = try makeModule(swiftDir: "swift", userSwiftDir: "sources")
         defer { try? FileManager.default.removeItem(at: root) }

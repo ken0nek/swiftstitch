@@ -111,7 +111,7 @@ Two subcommands. Bare invocation prints usage to stderr and exits `64`.
 
 | What | Resolution | Failure mode |
 |---|---|---|
-| Inputs | `--input` (repeatable, exact paths) — else glob `<dir>/Hybrid*.swift` relative to CWD (non-recursive, sorted), where `<dir>` is `swiftstitch.userSwiftDir` from `nitro.json` if that block is present, otherwise `swift/`. | Empty set → error naming the directory actually scanned. |
+| Inputs | `--input` (repeatable, exact paths), else glob `<dir>/Hybrid*.swift` relative to CWD (non-recursive, sorted), where `<dir>` is `swiftstitch.userSwiftDir` from `nitro.json` if that block is present, otherwise `swift/`. | Empty set → error naming the directory actually scanned. |
 | Outputs | Neither flag → **both** artifacts to `specs/`. Exactly one flag → **only** that artifact (TS-only / JSON-only opt-in). Both flags → both, to their dirs. | Write failure → error. Output dirs are created as needed. |
 | Platforms (per spec) | CLI flags win **wholesale** if any are present (no per-platform mixing with `nitro.json`). Else `nitro.json` `autolinking.<SpecName>.{ios,android}.language`. | Empty after resolution → error `no platforms for spec`. |
 | `nitro.json` | Loaded once from `./nitro.json` (CWD-relative — per-package scripts `cd` first). Missing file is fine (→ flags-only). | Malformed file is a **hard error**, never a silent fallback. |
@@ -308,15 +308,15 @@ bundle resources.
 
 | Suite | File | Pins |
 |---|---|---|
-| Phase 1A.1 — swift-syntax smoke parse | `SmokeParseTests` | Dependency wiring; parser accepts/flags sources. |
+| swift-syntax smoke parse | `SmokeParseTests` | Dependency wiring; parser accepts/flags sources. |
 | HybridObject class extraction | `HybridObjectExtractorTests` | Prefix convention (bare `Hybrid` excluded), multi-class files, empty-platform pass-through, stray `@HybridObject` attribute tolerated, source locations. |
 | Method signature extraction | `MethodExtractorTests` | public-only filtering, label rules (`_` → internal name), per-type accept/reject diagnostics. |
 | Type coverage | `TypesCoverageTests` | Full 6-type matrix as params and returns (parameterized), void variants, throws-drops-from-TS, import minimality, `HybridTypes` golden byte-for-byte. |
 | .nitro.ts emitter | `NitroTSEmitterTests` | `HybridMath` extractor→emitter golden. |
-| Phase 1G.1 — IR JSON codec | `IRJSONCodecTests` | Encode/decode round-trip, `HybridMath` IR golden, strict version/kind rejection. |
+| IR JSON codec | `IRJSONCodecTests` | Encode/decode round-trip, `HybridMath` IR golden, strict version/kind rejection. |
 | nitro.json reader | `NitroJSONReaderTests` | missing-nil / malformed-throws, per-platform lookup, unknown-language skip. |
 | Init template | `InitTemplateTests` | Name normalization matrix, template substitution, and the template→extractor round-trip (proves `#if canImport` parsing). |
-| Phase 1A.5 — end-to-end | `EndToEndTests` | Real subprocess run: built CLI binary → `.nitro.ts` → real `bun nitrogen` → asserts the 6 generated bridge artifacts + spot-checks the C++ header. |
+| End-to-end | `EndToEndTests` | Real subprocess run: built CLI binary → `.nitro.ts` → real `bun nitrogen` → asserts the 6 generated bridge artifacts + spot-checks the C++ header. |
 
 E2E prerequisites (it `#require`s both, with clear messages): `swift build`
 has produced `.build/debug/nitrogen-swift-input`, and `bun install` at the

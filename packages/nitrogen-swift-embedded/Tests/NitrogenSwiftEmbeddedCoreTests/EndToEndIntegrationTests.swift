@@ -5,9 +5,9 @@ import Testing
 
 /// End-to-end: emitter → swiftc (Embedded) → NDK clang link → Android `.so`.
 ///
-/// Verifies the Phase 2C dream path actually produces a single-`.so` Android
+/// Verifies the Embedded pipeline actually produces a single-`.so` Android
 /// artifact with no per-Hybrid Swift `.so` and no Swift stdlib in jniLibs.
-@Suite("Phase 2C end-to-end: Swift → .o → Android .so")
+@Suite("End-to-end: Swift → .o → Android .so")
 struct EndToEndIntegrationTests {
     @Test(
         "HybridSimpleMath: full pipeline produces a single .so with @c symbols and only bionic deps",
@@ -130,7 +130,7 @@ struct EndToEndIntegrationTests {
 
         // 9. Verify the .so has exactly the expected dynamic deps — bionic only,
         // NO libswiftCore.so / libFoundation*.so. This is the headline assertion
-        // for Phase 2C: no Swift runtime in jniLibs.
+        // of this package: no Swift runtime in jniLibs.
         let needed = try dynamicNeededLibs(of: outSo, ndkRoot: try ndkRoot())
         #expect(!needed.contains { $0.lowercased().contains("swift") },
                 "unexpected Swift runtime dependency: \(needed)")

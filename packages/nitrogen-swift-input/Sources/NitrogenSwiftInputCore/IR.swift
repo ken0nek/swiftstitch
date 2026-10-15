@@ -90,7 +90,7 @@ public struct ParameterIR: Hashable, Sendable {
     }
 }
 
-/// Phase 1A scope: int/number-only primitives. String/array/struct/enum/etc.
+/// Scope: int/number-only primitives. String/array/struct/enum/etc.
 /// are intentionally excluded — the extractor rejects them with a diagnostic.
 public enum TypeIR: Hashable, Sendable {
     case int64
